@@ -1,83 +1,43 @@
 # minio-lab — MinIO Community → Enterprise migration verification
 
+A small lab that migrates a bucket from one MinIO to another with
+[Chorus](https://github.com/clyso/chorus), then verifies the result with an
+independent S3 tool.
+
 | Directory | Purpose |
 |-----------|---------|
 | `minio-a/` | Source MinIO (`http://localhost:9000`, console `:9001`), compose file + data dir (ignored) |
 | `minio-b/` | Target MinIO (`http://localhost:9002`, console `:9003`), compose file + data dir (ignored) |
-| `chorus/` | Upstream clone of <https://github.com/clyso/chorus> (ignored, see below) |
+| `chorus/` | Upstream clone of <https://github.com/clyso/chorus> (ignored; lab changes are in `chorus-lab-config.patch`) |
 | `minio-migration-verification/` | `migration-verify` Go CLI, checklist, Chorus findings, test results, reports |
 
-## Reproduce the lab
-
-Run the steps from the repository root. Every step is safe to re-run.
-
-Do not paste `#` comments into `zsh`. Interactive `zsh` does not allow them
-by default, so the line fails with `parse error near '#'`.
-
-**1. Shared docker network**
+## Quick start
 
 ```bash
-docker network inspect minio-migration >/dev/null 2>&1 || docker network create minio-migration
+make          # list every target
+make lab      # MinIO A+B, sample data, Chorus, replication, verification
 ```
 
-**2. Source and target MinIO**
+Requirements: Docker, Go 1.22+, and `chorctl`
+(`brew install clyso/tap/chorctl`) for the replication step.
 
-```bash
-(cd minio-a && docker compose up -d)
-(cd minio-b && docker compose up -d)
-docker network connect minio-migration minio-a 2>/dev/null || true
-docker network connect minio-migration minio-b 2>/dev/null || true
-```
+## The three parts are independent
 
-**3. Chorus at the pinned commit**
+You do not have to run everything. Pick what you need:
 
-```bash
-[ -d chorus ] || git clone https://github.com/clyso/chorus
-git -C chorus checkout 8b68045
-```
+| Goal | Command | Details |
+|---|---|---|
+| Two S3 servers to experiment with | `make minio-up && make seed` | [GUIDE.md — Path A](GUIDE.md#path-a--only-minio-a-and-minio-b) |
+| Chorus replication only | `make chorus-up && make repl` | [GUIDE.md — Path B](GUIDE.md#path-b--only-chorus) |
+| Verify any S3 migration, no lab needed | `cd minio-migration-verification && make build` | [GUIDE.md — Path C](GUIDE.md#path-c--only-migration-verify) |
+| The full recorded experiment | `make lab` | [GUIDE.md — Path D](GUIDE.md#path-d--the-full-lab) |
 
-**4. Lab config patch** (external network + `minio-a`/`minio-b` storages)
+Stop everything with `make down`. Delete the data too with `make clean`.
 
-```bash
-git -C chorus apply --reverse --check ../chorus-lab-config.patch 2>/dev/null \
-  || git -C chorus apply ../chorus-lab-config.patch
-```
+## Documents
 
-The first command asks "is the patch already applied?". If yes, nothing happens.
-
-**5. Chorus stack** (redis, worker, web-ui; the S3 proxy is not needed)
-
-```bash
-(cd chorus/docker-compose && docker compose up -d)
-```
-
-Wait for the worker REST API before the next step:
-
-```bash
-until curl -sf http://localhost:9671/storage >/dev/null; do sleep 2; done
-```
-
-**6. Replication rule**
-
-```bash
-brew install clyso/tap/chorctl
-chorctl repl add -u user1 -f main -t follower -b migration-test
-```
-
-**7. Verification tool**
-
-```bash
-cd minio-migration-verification && make build && ./run-verify.sh --smoke-test
-```
-
-## Reset the lab
-
-```bash
-(cd chorus/docker-compose && docker compose down -v)
-(cd minio-a && docker compose down) && (cd minio-b && docker compose down)
-docker network rm minio-migration
-rm -rf chorus minio-a/data minio-b/data
-```
-
-See `minio-migration-verification/README.md` for the tool and
-`minio-migration-verification/TEST_RESULTS.md` for the recorded results.
+* **[GUIDE.md](GUIDE.md)** — step-by-step setup, ports, credentials, common errors.
+* [minio-migration-verification/README.md](minio-migration-verification/README.md) — the `migration-verify` tool: flags, checks, report format.
+* [minio-migration-verification/CHECKLIST.md](minio-migration-verification/CHECKLIST.md) — the verification checklist.
+* [minio-migration-verification/CHORUS_FINDINGS.md](minio-migration-verification/CHORUS_FINDINGS.md) — what Chorus reports, and what it does not.
+* [minio-migration-verification/TEST_RESULTS.md](minio-migration-verification/TEST_RESULTS.md) — recorded commands and results.
