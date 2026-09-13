@@ -59,6 +59,7 @@ func (v *Verifier) Run(ctx context.Context) (*report.Report, error) {
 			"versions": v.cfg.CheckVersions, "failOnExtra": v.cfg.FailOnExtra, "prefix": v.cfg.Prefix,
 			"concurrency": v.cfg.Concurrency, "smokeTest": v.cfg.SmokeTest, "ignoreMetaKeys": v.cfg.IgnoreMetaKeys,
 			"allBuckets": v.cfg.AllBuckets, "maxDeepBytes": v.cfg.MaxDeepBytes,
+			"requestTimeout": v.cfg.RequestTimeout.String(), "failOnWarn": v.cfg.FailOnWarn,
 		},
 	}
 
@@ -152,6 +153,7 @@ func (v *Verifier) verifyBucket(ctx context.Context, p BucketPair) report.Bucket
 		return br
 	}
 	add(report.Check{Name: "Object Listing", Status: report.Pass, Detail: fmt.Sprintf("listed %d source / %d target objects", len(src), len(tgt))})
+	v.Log("  listed %d source / %d target objects", len(src), len(tgt))
 
 	var srcKeys, tgtKeys []string
 	for k, vs := range src {

@@ -24,6 +24,9 @@ func newStorage(s Side) (*storage, error) {
 	}
 	transport := http.DefaultTransport.(*http.Transport).Clone()
 	transport.MaxIdleConnsPerHost = 64
+	// Bound the wait for response headers so a hung request cannot block a
+	// worker forever. Body transfer (large GETs) is not limited by this.
+	transport.ResponseHeaderTimeout = s.HeaderTimeout
 	if s.Insecure {
 		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //nolint:gosec // opt-in via --insecure
 	}

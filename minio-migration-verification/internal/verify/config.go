@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+	"time"
 )
 
 // Side holds the connection parameters for one storage.
@@ -18,6 +19,8 @@ type Side struct {
 	SecretKey string
 	Region    string
 	Insecure  bool // skip TLS verification
+
+	HeaderTimeout time.Duration // max wait for response headers per request
 }
 
 // BucketPair maps a source bucket to a target bucket (usually the same name).
@@ -53,6 +56,8 @@ type Config struct {
 	SmokeTest       bool // run PUT/GET/HEAD/DELETE/presign on the target bucket
 	SmokeTestPrefix string
 	MaxDeepBytes    int64 // 0 = unlimited; cap on bytes downloaded for deep checks
+	RequestTimeout  time.Duration
+	FailOnWarn      bool // treat an overall WARN as FAIL (exit 1)
 }
 
 // Validate fills defaults and rejects impossible combinations.
@@ -74,6 +79,10 @@ func (c *Config) Validate() error {
 	if c.Concurrency < 1 {
 		c.Concurrency = 8
 	}
+	if c.RequestTimeout <= 0 {
+		c.RequestTimeout = 2 * time.Minute
+	}
+	c.Source.HeaderTimeout, c.Target.HeaderTimeout = c.RequestTimeout, c.RequestTimeout
 	switch c.CheckVersions {
 	case "", "auto":
 		c.CheckVersions = "auto"

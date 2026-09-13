@@ -27,19 +27,21 @@ func (v *Verifier) smokeTest(ctx context.Context, bucket string) report.Check {
 	key := v.cfg.SmokeTestPrefix + "probe-" + hex.EncodeToString(rnd[:]) + ".txt"
 	payload := []byte("migration-verify smoke test " + time.Now().UTC().Format(time.RFC3339Nano))
 	var steps []string
+	var versionID string // set after PUT; on versioned buckets we must delete this exact version
 	fail := func(step string, err error) report.Check {
 		// best-effort cleanup
-		_ = v.tgt.client.RemoveObject(ctx, bucket, key, minio.RemoveObjectOptions{})
+		_ = v.tgt.client.RemoveObject(ctx, bucket, key, minio.RemoveObjectOptions{VersionID: versionID})
 		return report.Check{Name: "App Smoke Test", Status: report.Fail,
 			Detail:  fmt.Sprintf("%s failed: %v (ok: %s)", step, err, strings.Join(steps, ",")),
 			Elapsed: time.Since(start).Round(time.Millisecond).String()}
 	}
 
-	_, err := v.tgt.client.PutObject(ctx, bucket, key, bytes.NewReader(payload), int64(len(payload)),
+	info, err := v.tgt.client.PutObject(ctx, bucket, key, bytes.NewReader(payload), int64(len(payload)),
 		minio.PutObjectOptions{ContentType: "text/plain", UserMetadata: map[string]string{"probe": "1"}})
 	if err != nil {
 		return fail("PUT", err)
 	}
+	versionID = info.VersionID
 	steps = append(steps, "PUT")
 
 	st, err := v.tgt.client.StatObject(ctx, bucket, key, minio.StatObjectOptions{})
@@ -81,10 +83,12 @@ func (v *Verifier) smokeTest(ctx context.Context, bucket string) report.Check {
 	}
 	steps = append(steps, "PRESIGNED-GET")
 
-	if err := v.tgt.client.RemoveObject(ctx, bucket, key, minio.RemoveObjectOptions{}); err != nil {
+	// Delete the exact version so that on a versioned bucket no probe version
+	// (and no delete marker) is left behind to pollute later version checks.
+	if err := v.tgt.client.RemoveObject(ctx, bucket, key, minio.RemoveObjectOptions{VersionID: versionID}); err != nil {
 		return fail("DELETE", err)
 	}
-	if _, err := v.tgt.client.StatObject(ctx, bucket, key, minio.StatObjectOptions{}); err == nil {
+	if _, err := v.tgt.client.StatObject(ctx, bucket, key, minio.StatObjectOptions{VersionID: versionID}); err == nil {
 		return fail("DELETE", fmt.Errorf("object still present after delete"))
 	}
 	steps = append(steps, "DELETE")

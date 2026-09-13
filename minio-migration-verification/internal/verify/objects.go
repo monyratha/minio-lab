@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/minio/minio-go/v7"
@@ -188,6 +189,18 @@ func (v *Verifier) compareObjects(ctx context.Context, pair BucketPair, common [
 
 	sem := make(chan struct{}, v.cfg.Concurrency)
 	var wg sync.WaitGroup
+	var done int64
+	lastLog := time.Now()
+	var logMu sync.Mutex
+	progress := func() {
+		n := atomic.AddInt64(&done, 1)
+		logMu.Lock()
+		defer logMu.Unlock()
+		if n == int64(len(common)) || time.Since(lastLog) >= 5*time.Second {
+			lastLog = time.Now()
+			v.Log("  %s: compared %d/%d objects", pair.Source, n, len(common))
+		}
+	}
 	for _, key := range common {
 		s := latest(src[key])
 		t := latest(tgt[key])
@@ -196,6 +209,7 @@ func (v *Verifier) compareObjects(ctx context.Context, pair BucketPair, common [
 		go func(key string, s, t *objInfo) {
 			defer wg.Done()
 			defer func() { <-sem }()
+			defer progress()
 			res := report.ObjectResult{Key: key, Status: report.Pass}
 			var reasons []string
 			var details []string

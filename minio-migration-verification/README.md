@@ -57,6 +57,15 @@ Cross-compile (e.g. to run on a Linux jump host next to the storage):
 GOOS=linux GOARCH=amd64 go build -o migration-verify-linux-amd64 ./cmd/migration-verify
 ```
 
+Or as a container (reports are written to the mounted `/reports`):
+
+```bash
+docker build -t migration-verify .
+docker run --rm --network host -v "$PWD/reports:/reports" \
+  -e SOURCE_ACCESS_KEY -e SOURCE_SECRET_KEY -e TARGET_ACCESS_KEY -e TARGET_SECRET_KEY \
+  migration-verify --source http://localhost:9000 --target http://localhost:9002 --bucket migration-test
+```
+
 ## 2. Configuration
 
 Credentials are read from the environment (recommended) and can be
@@ -120,6 +129,8 @@ There is a convenience wrapper with the same defaults: `./run-verify.sh [extra f
 --smoke-test               PUT/HEAD/GET/presigned-GET/DELETE a probe object on the
                            target bucket (writes to target, probe is always removed)
 --smoke-test-prefix P      key prefix for the probe (default .migration-verify-smoke/)
+--request-timeout D        max wait for response headers of one S3 request (default 2m)
+--fail-on-warn             exit 1 when the overall status is WARN
 --json PATH                JSON report path (default migration-report.json, '' = off)
 --html PATH                HTML report path (default migration-report.html, '' = off)
 --quiet                    no text summary on stdout
@@ -130,7 +141,7 @@ There is a convenience wrapper with the same defaults: `./run-verify.sh [extra f
 
 | Code | Meaning |
 |------|---------|
-| 0 | overall `PASS` (or `WARN`) |
+| 0 | overall `PASS` (or `WARN` unless `--fail-on-warn`) |
 | 1 | overall `FAIL` — at least one verification check failed |
 | 2 | could not run (bad arguments, endpoint unreachable, `ERROR` status) |
 
@@ -187,7 +198,7 @@ actually needed.
 | Tags | 2 | `GetObjectTagging` on both (`--tags=false` to skip) |
 | Content (SHA-256) | 3 / on demand | `GetObject` streamed through SHA-256 on both sides, hashes compared |
 | Versions | auto | `ListObjectVersions` on both; per key the ordered history is compared |
-| App Smoke Test | opt-in | PUT → HEAD → GET → presigned GET → DELETE of a probe object on the target |
+| App Smoke Test | opt-in | PUT → HEAD → GET → presigned GET → DELETE of a probe object on the target; the exact version written is deleted, so versioned buckets keep no probe version or delete marker |
 
 ### ETag rules (why "checksum where reliable")
 
@@ -312,6 +323,11 @@ Field notes:
   prefixes, or disable tags with `--tags=false`.
 * The tool verifies a **snapshot**: if the source is still being written to,
   run it after writes are frozen (or after the migration tool's switch-over).
+* **No resume:** an interrupted run must be restarted; shard very large
+  buckets with `--prefix` so each run is short.
+* `--smoke-test` cannot delete its probe on buckets with Object Lock in
+  COMPLIANCE/GOVERNANCE mode with a default retention; the check reports
+  FAIL at the DELETE step in that case.
 
 ## 7. Project layout
 
@@ -325,6 +341,7 @@ internal/verify/versions.go       version-history comparison
 internal/verify/smoke.go          application-level PUT/GET/HEAD/DELETE/presign test
 internal/verify/verifier.go       orchestration, per-bucket checks, limitations
 internal/verify/verify_test.go    unit tests for the pure comparison logic
+Dockerfile                        container build (multi-stage, static binary)
 internal/report/model.go          JSON report model + status roll-up
 internal/report/render.go         text / JSON / HTML renderers
 reports/                          generated reports for the lab data + self-test evidence

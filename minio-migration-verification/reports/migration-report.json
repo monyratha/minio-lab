@@ -1,7 +1,7 @@
 {
   "tool": "migration-verify",
   "version": "0.1.0",
-  "generatedAt": "2026-09-12T16:36:30.643354Z",
+  "generatedAt": "2026-09-13T06:43:20.292374Z",
   "source": {
     "label": "MinIO A",
     "endpoint": "http://localhost:9000",
@@ -20,10 +20,12 @@
     "concurrency": 8,
     "deepOnInconclusive": true,
     "failOnExtra": true,
+    "failOnWarn": false,
     "ignoreMetaKeys": null,
     "level": 2,
     "maxDeepBytes": 0,
     "prefix": "",
+    "requestTimeout": "2m0s",
     "smokeTest": true,
     "versions": "auto"
   },
@@ -142,8 +144,8 @@
         {
           "name": "App Smoke Test",
           "status": "PASS",
-          "detail": "target: PUT, HEAD, GET, PRESIGNED-GET, DELETE ok (probe .migration-verify-smoke/probe-c030fe19269432f1.txt removed)",
-          "elapsed": "10ms"
+          "detail": "target: PUT, HEAD, GET, PRESIGNED-GET, DELETE ok (probe .migration-verify-smoke/probe-bd56238435045ffd.txt removed)",
+          "elapsed": "6ms"
         }
       ],
       "summary": {
@@ -234,7 +236,7 @@
           }
         }
       ],
-      "elapsed": "25ms"
+      "elapsed": "16ms"
     }
   ],
   "totals": {
@@ -251,7 +253,7 @@
     "deepVerified": 0,
     "deepBytes": 0
   },
-  "elapsed": "32ms",
+  "elapsed": "19ms",
   "limitations": [
     "ETag equality is used as the content check: it is the MD5 of the object for single-part, unencrypted uploads and is therefore a reliable content fingerprint in that case.",
     "Multipart ETags (suffix -N) depend on part size and encrypted objects (SSE) have non-MD5 ETags; when such ETags differ the object is marked inconclusive and, with --deep-on-inconclusive (default), both copies are downloaded and compared by SHA-256.",

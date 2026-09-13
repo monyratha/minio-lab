@@ -15,7 +15,7 @@ code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5p
 details{margin:6px 0}summary{cursor:pointer}ul.lim{margin:4px 0 0 18px}
 </style></head><body>
 <h1>MinIO Migration Verification</h1>
-<div class="muted">migration-verify 0.1.0 · generated 2026-09-12 16:36:30 UTC · elapsed 32ms</div>
+<div class="muted">migration-verify 0.1.0 · generated 2026-09-13 06:43:20 UTC · elapsed 19ms</div>
 <div class="hero"><span class="badge big s-pass">PASS</span>
 <div><div><b>Source:</b> MinIO A <code>http://localhost:9000</code></div><div><b>Target:</b> MinIO B <code>http://localhost:9002</code></div></div></div>
 
@@ -37,7 +37,7 @@ details{margin:6px 0}summary{cursor:pointer}ul.lim{margin:4px 0 0 18px}
 
 <h2>Bucket <code>migration-test</code> → <code>migration-test</code> <span class="badge s-pass">PASS</span></h2>
 <table><tr><th>Check</th><th>Status</th><th>Source</th><th>Target</th><th>Detail</th></tr>
-<tr><td>Bucket Exists</td><td><span class="badge s-pass">PASS</span></td><td>yes</td><td>yes</td><td></td></tr><tr><td>Versioning</td><td><span class="badge s-pass">PASS</span></td><td>none</td><td>none</td><td></td></tr><tr><td>Object Lock</td><td><span class="badge s-pass">PASS</span></td><td>none</td><td>none</td><td></td></tr><tr><td>Bucket Tags</td><td><span class="badge s-pass">PASS</span></td><td>none</td><td>none</td><td></td></tr><tr><td>Bucket Policy</td><td><span class="badge s-pass">PASS</span></td><td>none</td><td>none</td><td></td></tr><tr><td>Lifecycle</td><td><span class="badge s-pass">PASS</span></td><td>none</td><td>none</td><td></td></tr><tr><td>Encryption</td><td><span class="badge s-pass">PASS</span></td><td>none</td><td>none</td><td></td></tr><tr><td>Object Listing</td><td><span class="badge s-pass">PASS</span></td><td></td><td></td><td>listed 4 source / 4 target objects</td></tr><tr><td>Object Count</td><td><span class="badge s-pass">PASS</span></td><td>4</td><td>4</td><td></td></tr><tr><td>Object Names</td><td><span class="badge s-pass">PASS</span></td><td></td><td></td><td>4 common</td></tr><tr><td>Object Size</td><td><span class="badge s-pass">PASS</span></td><td></td><td></td><td>4 of 4 compared</td></tr><tr><td>Checksum / ETag</td><td><span class="badge s-pass">PASS</span></td><td></td><td></td><td>4 of 4 match</td></tr><tr><td>Content Type</td><td><span class="badge s-pass">PASS</span></td><td></td><td></td><td>4 of 4 compared</td></tr><tr><td>Metadata</td><td><span class="badge s-pass">PASS</span></td><td></td><td></td><td>4 of 4 compared</td></tr><tr><td>Tags</td><td><span class="badge s-pass">PASS</span></td><td></td><td></td><td>4 of 4 compared</td></tr><tr><td>Content (SHA-256)</td><td><span class="badge s-skipped">SKIPPED</span></td><td></td><td></td><td>not needed: all comparable ETags matched (use --level 3 to force)</td></tr><tr><td>Versions</td><td><span class="badge s-n/a">N/A</span></td><td></td><td></td><td>bucket is not versioned</td></tr><tr><td>App Smoke Test</td><td><span class="badge s-pass">PASS</span></td><td></td><td></td><td>target: PUT, HEAD, GET, PRESIGNED-GET, DELETE ok (probe .migration-verify-smoke/probe-c030fe19269432f1.txt removed)</td></tr>
+<tr><td>Bucket Exists</td><td><span class="badge s-pass">PASS</span></td><td>yes</td><td>yes</td><td></td></tr><tr><td>Versioning</td><td><span class="badge s-pass">PASS</span></td><td>none</td><td>none</td><td></td></tr><tr><td>Object Lock</td><td><span class="badge s-pass">PASS</span></td><td>none</td><td>none</td><td></td></tr><tr><td>Bucket Tags</td><td><span class="badge s-pass">PASS</span></td><td>none</td><td>none</td><td></td></tr><tr><td>Bucket Policy</td><td><span class="badge s-pass">PASS</span></td><td>none</td><td>none</td><td></td></tr><tr><td>Lifecycle</td><td><span class="badge s-pass">PASS</span></td><td>none</td><td>none</td><td></td></tr><tr><td>Encryption</td><td><span class="badge s-pass">PASS</span></td><td>none</td><td>none</td><td></td></tr><tr><td>Object Listing</td><td><span class="badge s-pass">PASS</span></td><td></td><td></td><td>listed 4 source / 4 target objects</td></tr><tr><td>Object Count</td><td><span class="badge s-pass">PASS</span></td><td>4</td><td>4</td><td></td></tr><tr><td>Object Names</td><td><span class="badge s-pass">PASS</span></td><td></td><td></td><td>4 common</td></tr><tr><td>Object Size</td><td><span class="badge s-pass">PASS</span></td><td></td><td></td><td>4 of 4 compared</td></tr><tr><td>Checksum / ETag</td><td><span class="badge s-pass">PASS</span></td><td></td><td></td><td>4 of 4 match</td></tr><tr><td>Content Type</td><td><span class="badge s-pass">PASS</span></td><td></td><td></td><td>4 of 4 compared</td></tr><tr><td>Metadata</td><td><span class="badge s-pass">PASS</span></td><td></td><td></td><td>4 of 4 compared</td></tr><tr><td>Tags</td><td><span class="badge s-pass">PASS</span></td><td></td><td></td><td>4 of 4 compared</td></tr><tr><td>Content (SHA-256)</td><td><span class="badge s-skipped">SKIPPED</span></td><td></td><td></td><td>not needed: all comparable ETags matched (use --level 3 to force)</td></tr><tr><td>Versions</td><td><span class="badge s-n/a">N/A</span></td><td></td><td></td><td>bucket is not versioned</td></tr><tr><td>App Smoke Test</td><td><span class="badge s-pass">PASS</span></td><td></td><td></td><td>target: PUT, HEAD, GET, PRESIGNED-GET, DELETE ok (probe .migration-verify-smoke/probe-bd56238435045ffd.txt removed)</td></tr>
 </table>
 <div class="grid">
 <div class="tile"><div class="v">4</div><div class="k">source objects</div></div>
@@ -121,10 +121,12 @@ details{margin:6px 0}summary{cursor:pointer}ul.lim{margin:4px 0 0 18px}
   &#34;concurrency&#34;: 8,
   &#34;deepOnInconclusive&#34;: true,
   &#34;failOnExtra&#34;: true,
+  &#34;failOnWarn&#34;: false,
   &#34;ignoreMetaKeys&#34;: null,
   &#34;level&#34;: 2,
   &#34;maxDeepBytes&#34;: 0,
   &#34;prefix&#34;: &#34;&#34;,
+  &#34;requestTimeout&#34;: &#34;2m0s&#34;,
   &#34;smokeTest&#34;: true,
   &#34;versions&#34;: &#34;auto&#34;
 }</pre>

@@ -1,7 +1,7 @@
 // Command migration-verify compares a source S3/MinIO deployment with a
 // target one after a migration and writes a PASS/FAIL report.
 //
-// Exit codes: 0 = PASS (or WARN), 1 = FAIL, 2 = could not run / ERROR.
+// Exit codes: 0 = PASS (or WARN unless --fail-on-warn), 1 = FAIL, 2 = could not run / ERROR.
 package main
 
 import (
@@ -12,6 +12,7 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/monyratha/migration-verify/internal/report"
 	"github.com/monyratha/migration-verify/internal/verify"
@@ -63,6 +64,8 @@ func main() {
 	fs.IntVar(&cfg.Concurrency, "concurrency", 8, "parallel object comparisons")
 	fs.BoolVar(&cfg.SmokeTest, "smoke-test", false, "run PUT/HEAD/GET/presigned-GET/DELETE with a probe object on the target bucket (writes to target)")
 	fs.StringVar(&cfg.SmokeTestPrefix, "smoke-test-prefix", ".migration-verify-smoke/", "key prefix for the smoke-test probe object")
+	fs.DurationVar(&cfg.RequestTimeout, "request-timeout", 2*time.Minute, "max wait for response headers of any single S3 request")
+	fs.BoolVar(&cfg.FailOnWarn, "fail-on-warn", false, "exit 1 when the overall status is WARN (e.g. inconclusive ETags)")
 
 	fs.StringVar(&jsonOut, "json", "migration-report.json", "path of the JSON report ('' to disable)")
 	fs.StringVar(&htmlOut, "html", "migration-report.html", "path of the HTML report ('' to disable)")
@@ -131,7 +134,12 @@ Flags:
 		os.Exit(2)
 	}
 	switch rep.Status {
-	case report.Pass, report.Warn:
+	case report.Pass:
+		os.Exit(0)
+	case report.Warn:
+		if cfg.FailOnWarn {
+			os.Exit(1)
+		}
 		os.Exit(0)
 	case report.Fail:
 		os.Exit(1)
