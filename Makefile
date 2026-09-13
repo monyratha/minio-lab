@@ -4,7 +4,7 @@
 NETWORK     := minio-migration
 CHORUS_REF  := 8b68045
 BUCKET      ?= migration-test
-USER        ?= user1
+CHORUS_USER ?= user1
 
 .DEFAULT_GOAL := help
 .PHONY: help net minio-up minio-down seed chorus-clone chorus-up chorus-down \
@@ -13,7 +13,7 @@ USER        ?= user1
 help:
 	@echo "Storage only (Path A)"
 	@echo "  make minio-up      start MinIO A (:9000) and B (:9002) on the shared network"
-	@echo "  make seed          create bucket '$(BUCKET)' with sample objects on MinIO A"
+	@echo "  make seed          create bucket '$(BUCKET)' with sample objects if it is missing"
 	@echo "  make minio-down    stop both MinIO containers"
 	@echo ""
 	@echo "Chorus only (Path B)"
@@ -45,13 +45,18 @@ minio-down:
 	cd minio-b && docker compose down
 
 # Uses the mc client inside a container, so nothing extra has to be installed.
+# Does nothing if the bucket already exists, so your data is never overwritten.
 seed:
 	docker run --rm --network $(NETWORK) --entrypoint sh minio/mc -c '\
 	  mc alias set a http://minio-a:9000 minioadmin minioadmin >/dev/null && \
-	  mc mb -p a/$(BUCKET) >/dev/null && \
-	  echo "hello lab" | mc pipe a/$(BUCKET)/hello.txt >/dev/null && \
-	  echo "second test object" | mc pipe a/$(BUCKET)/file1.txt >/dev/null && \
-	  head -c 10485760 /dev/urandom | mc pipe a/$(BUCKET)/file3.bin >/dev/null && \
+	  if mc ls a/$(BUCKET) >/dev/null 2>&1; then \
+	    echo "bucket $(BUCKET) already exists on minio-a, leaving it alone"; \
+	  else \
+	    mc mb a/$(BUCKET) >/dev/null && \
+	    echo "hello lab" | mc pipe a/$(BUCKET)/hello.txt >/dev/null && \
+	    echo "second test object" | mc pipe a/$(BUCKET)/file1.txt >/dev/null && \
+	    head -c 10485760 /dev/urandom | mc pipe a/$(BUCKET)/file3.bin >/dev/null; \
+	  fi && \
 	  mc ls --summarize a/$(BUCKET)'
 
 chorus-clone:
@@ -72,13 +77,13 @@ chorus-down:
 	cd chorus/docker-compose && docker compose down
 
 repl: chorus-wait
-	chorctl repl add -u $(USER) -f main -t follower -b $(BUCKET) || true
+	chorctl repl add -u $(CHORUS_USER) -f main -t follower -b $(BUCKET) || true
 	chorctl repl
 
 verify:
 	cd minio-migration-verification && $(MAKE) build && BUCKET=$(BUCKET) ./run-verify.sh --smoke-test
 
-lab: minio-up chorus-up repl verify
+lab: minio-up seed chorus-up repl verify
 
 status:
 	docker ps --filter network=$(NETWORK) --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'

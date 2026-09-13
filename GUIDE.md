@@ -229,6 +229,7 @@ curl -sf http://localhost:9671/storage && echo " worker OK"
 | `patch does not apply` | Usually already applied. | `git -C chorus apply --reverse --check ../chorus-lab-config.patch` — no output means it is applied. |
 | `zsh: parse error near '#'` | zsh rejects `#` comments when pasted. | Remove the comment from the line. |
 | `dial tcp [::1]:9671: connection refused` | The Chorus worker is not running. | `make chorus-up && make chorus-wait` |
+| `InvalidArg: unknown user … for storage main` | Chorus does not know that user name. | Use `user1`, or `make repl CHORUS_USER=<name>`. The name must exist under `credentials:` in `s3-credentials.yaml`. |
 | `Bucket 'migration-test' does not exist` | Nothing was seeded on MinIO A. | `make seed` |
 | Port already in use | Another service holds 9000/9001/9002/9003. | Change the left side of `ports:` in the compose file. |
 
@@ -242,3 +243,19 @@ make clean    # also delete MinIO data, the chorus clone and built binaries
 `make clean` deletes the `minio-a/data` and `minio-b/data` folders. All lab
 objects are lost. That is the point of a lab, but do not run it in a
 directory holding data you want.
+
+## 6. Makefile variables
+
+Override them on the command line, for example `make verify BUCKET=my-bucket`.
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `BUCKET` | `migration-test` | bucket used by `seed`, `repl` and `verify` |
+| `CHORUS_USER` | `user1` | Chorus user in `s3-credentials.yaml` |
+| `NETWORK` | `minio-migration` | shared docker network |
+| `CHORUS_REF` | `8b68045` | pinned upstream chorus commit |
+
+The Chorus user is **not** your login name. It must match a key under
+`credentials:` in `chorus/docker-compose/s3-credentials.yaml`. The variable is
+called `CHORUS_USER`, not `USER`, because `USER` is already set by your shell
+and would silently win.
