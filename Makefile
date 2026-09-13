@@ -69,14 +69,22 @@ chorus-up: net chorus-clone
 
 chorus-wait:
 	@echo "waiting for the chorus worker API on :9671 ..."
-	until curl -sf http://localhost:9671/storage >/dev/null; do sleep 2; done
-	@echo "worker is up"
+	@waited=0; while [ $$waited -lt 120 ]; do \
+	  curl -sf http://localhost:9671/storage >/dev/null && { echo "worker is up"; exit 0; }; \
+	  waited=$$((waited + 2)); sleep 2; \
+	done; \
+	echo "worker did not answer within 120s; see 'docker logs docker-compose-worker-1'" >&2; \
+	exit 1
 
 chorus-down:
 	[ -d chorus/docker-compose ] || exit 0; cd chorus/docker-compose && docker compose down
 
+# 'repl add' returns immediately; the copy runs in the background. Waiting
+# here is what makes 'make lab' verify a finished migration instead of an
+# empty target bucket.
 repl: chorus-wait
 	chorctl repl add -u $(CHORUS_USER) -f main -t follower -b $(BUCKET) || true
+	@scripts/wait-replication.sh
 	chorctl repl
 
 verify:
