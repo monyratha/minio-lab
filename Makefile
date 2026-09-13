@@ -4,6 +4,7 @@
 NETWORK     := minio-migration
 CHORUS_REF  := 8b68045
 BUCKET      ?= migration-test
+MC_IMAGE    ?= quay.io/minio/mc:latest
 CHORUS_USER ?= user1
 
 .DEFAULT_GOAL := help
@@ -44,20 +45,18 @@ minio-down:
 	cd minio-a && docker compose down
 	cd minio-b && docker compose down
 
-# Uses the mc client inside a container, so nothing extra has to be installed.
-# Does nothing if the bucket already exists, so your data is never overwritten.
+# Uses your local mc client when you have one, otherwise the mc container.
+# minio/mc is no longer on Docker Hub, so the image comes from quay.io.
 seed:
-	docker run --rm --network $(NETWORK) --entrypoint sh minio/mc -c '\
-	  mc alias set a http://minio-a:9000 minioadmin minioadmin >/dev/null && \
-	  if mc ls a/$(BUCKET) >/dev/null 2>&1; then \
-	    echo "bucket $(BUCKET) already exists on minio-a, leaving it alone"; \
-	  else \
-	    mc mb a/$(BUCKET) >/dev/null && \
-	    echo "hello lab" | mc pipe a/$(BUCKET)/hello.txt >/dev/null && \
-	    echo "second test object" | mc pipe a/$(BUCKET)/file1.txt >/dev/null && \
-	    head -c 10485760 /dev/urandom | mc pipe a/$(BUCKET)/file3.bin >/dev/null; \
-	  fi && \
-	  mc ls --summarize a/$(BUCKET)'
+	@if command -v mc >/dev/null 2>&1; then \
+	  echo "seeding with the local mc client"; \
+	  ENDPOINT=http://localhost:9000 BUCKET=$(BUCKET) scripts/seed.sh; \
+	else \
+	  echo "no local mc found, seeding with $(MC_IMAGE)"; \
+	  docker run --rm --network $(NETWORK) -v "$$PWD/scripts:/scripts:ro" \
+	    --entrypoint sh $(MC_IMAGE) \
+	    -c "ENDPOINT=http://minio-a:9000 BUCKET=$(BUCKET) /scripts/seed.sh"; \
+	fi
 
 chorus-clone:
 	[ -d chorus ] || git clone https://github.com/clyso/chorus
