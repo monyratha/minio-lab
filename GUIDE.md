@@ -235,14 +235,35 @@ curl -sf http://localhost:9671/storage && echo " worker OK"
 
 ## 5. Stop and clean up
 
+Stop the containers and remove the network:
+
 ```bash
-make down     # stop containers, remove the network
-make clean    # also delete MinIO data, the chorus clone and built binaries
+make down
+```
+
+Also delete the MinIO data, the redis volume, the chorus clone and the built
+binary:
+
+```bash
+make clean
 ```
 
 `make clean` deletes the `minio-a/data` and `minio-b/data` folders. All lab
 objects are lost. That is the point of a lab, but do not run it in a
 directory holding data you want.
+
+The redis volume matters. Chorus stores its replication policies there. If
+you delete the MinIO data but keep that volume, Chorus still believes the old
+replication finished, copies nothing, and the next verification run fails
+with an empty target. `make clean` removes it. A plain
+`docker compose down` does not.
+
+**Start again from zero:**
+
+```bash
+make clean
+make lab
+```
 
 ## 6. Makefile variables
 

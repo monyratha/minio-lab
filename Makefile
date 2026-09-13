@@ -74,7 +74,7 @@ chorus-wait:
 	@echo "worker is up"
 
 chorus-down:
-	cd chorus/docker-compose && docker compose down
+	[ -d chorus/docker-compose ] || exit 0; cd chorus/docker-compose && docker compose down
 
 repl: chorus-wait
 	chorctl repl add -u $(CHORUS_USER) -f main -t follower -b $(BUCKET) || true
@@ -91,5 +91,8 @@ status:
 down: chorus-down minio-down
 	docker network rm $(NETWORK) 2>/dev/null || true
 
+# Chorus keeps its replication policies in the redis volume. Without '-v' a
+# fresh lab would still think the old replication is finished and copy nothing.
 clean: down
+	[ -d chorus/docker-compose ] && (cd chorus/docker-compose && docker compose down -v) || true
 	rm -rf chorus minio-a/data minio-b/data minio-migration-verification/bin
