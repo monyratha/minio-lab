@@ -132,6 +132,16 @@ chorctl dash
 chorctl diff check -u user1 -f main -t follower -b migration-test
 ```
 
+`repl add` returns immediately. The worker lists and copies the objects in
+the background, so `chorctl repl` right after it shows `0.0 %`. Wait for
+`isInitDone` before you verify:
+
+```bash
+scripts/wait-replication.sh
+```
+
+`make repl` already does this for you.
+
 Same data over plain HTTP, no CLI:
 
 ```bash
@@ -233,6 +243,7 @@ curl -sf http://localhost:9671/storage && echo " worker OK"
 | `patch does not apply` | Usually already applied. | `git -C chorus apply --reverse --check ../chorus-lab-config.patch` — no output means it is applied. |
 | `zsh: parse error near '#'` | zsh rejects `#` comments when pasted. | Remove the comment from the line. |
 | `dial tcp [::1]:9671: connection refused` | The Chorus worker is not running. | `make chorus-up && make chorus-wait` |
+| `Bucket Exists FAIL target bucket does not exist` | Verification ran before Chorus finished copying. | Update to the latest `Makefile`; `make repl` now waits for `isInitDone`. Or run `make verify` again. |
 | `pull access denied for minio/mc` | MinIO images are no longer on Docker Hub. | Update to the latest `Makefile`; it pulls `quay.io/minio/mc`. Override with `make seed MC_IMAGE=…`. |
 | `InvalidArg: unknown user … for storage main` | Chorus does not know that user name. | Use `user1`, or `make repl CHORUS_USER=<name>`. The name must exist under `credentials:` in `s3-credentials.yaml`. |
 | `Bucket 'migration-test' does not exist` | Nothing was seeded on MinIO A. | `make seed` |
