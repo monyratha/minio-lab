@@ -72,6 +72,18 @@ them. For Path A alone you can skip the two `network connect` lines.
 otherwise runs `mc` in a container. Note that MinIO images live on
 **quay.io**, not Docker Hub.
 
+It writes four objects on purpose:
+
+| Object | Uploaded with | ETag |
+|---|---|---|
+| `hello.txt`, `file1.txt`, `file2.txt` | `mc cp` | plain MD5, compared directly |
+| `file3.bin` (10 MiB) | `mc pipe` | multipart, so the verification falls back to SHA-256 |
+
+`mc pipe` streams, and a streamed upload is always multipart. A multipart
+ETag is not the MD5 of the content, so it cannot be compared between two
+servers. Keeping one such object means every lab run exercises the deep
+check as well as the cheap one.
+
 Or put data in by hand with the MinIO client:
 
 ```bash
