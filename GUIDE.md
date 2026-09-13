@@ -68,7 +68,11 @@ docker network connect minio-migration minio-b 2>/dev/null || true
 The shared network is only needed if another container (Chorus) must reach
 them. For Path A alone you can skip the two `network connect` lines.
 
-Put some data in with the MinIO client:
+`make seed` does this for you. It uses your local `mc` if you have one, and
+otherwise runs `mc` in a container. Note that MinIO images live on
+**quay.io**, not Docker Hub.
+
+Or put data in by hand with the MinIO client:
 
 ```bash
 mc alias set a http://localhost:9000 minioadmin minioadmin
@@ -229,6 +233,7 @@ curl -sf http://localhost:9671/storage && echo " worker OK"
 | `patch does not apply` | Usually already applied. | `git -C chorus apply --reverse --check ../chorus-lab-config.patch` — no output means it is applied. |
 | `zsh: parse error near '#'` | zsh rejects `#` comments when pasted. | Remove the comment from the line. |
 | `dial tcp [::1]:9671: connection refused` | The Chorus worker is not running. | `make chorus-up && make chorus-wait` |
+| `pull access denied for minio/mc` | MinIO images are no longer on Docker Hub. | Update to the latest `Makefile`; it pulls `quay.io/minio/mc`. Override with `make seed MC_IMAGE=…`. |
 | `InvalidArg: unknown user … for storage main` | Chorus does not know that user name. | Use `user1`, or `make repl CHORUS_USER=<name>`. The name must exist under `credentials:` in `s3-credentials.yaml`. |
 | `Bucket 'migration-test' does not exist` | Nothing was seeded on MinIO A. | `make seed` |
 | Port already in use | Another service holds 9000/9001/9002/9003. | Change the left side of `ports:` in the compose file. |
@@ -275,6 +280,7 @@ Override them on the command line, for example `make verify BUCKET=my-bucket`.
 | `CHORUS_USER` | `user1` | Chorus user in `s3-credentials.yaml` |
 | `NETWORK` | `minio-migration` | shared docker network |
 | `CHORUS_REF` | `8b68045` | pinned upstream chorus commit |
+| `MC_IMAGE` | `quay.io/minio/mc:latest` | mc image, used only when you have no local `mc` |
 
 The Chorus user is **not** your login name. It must match a key under
 `credentials:` in `chorus/docker-compose/s3-credentials.yaml`. The variable is
