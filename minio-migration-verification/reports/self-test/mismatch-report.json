@@ -1,0 +1,324 @@
+{
+  "tool": "migration-verify",
+  "version": "0.1.0",
+  "generatedAt": "2026-09-12T16:14:15.686654Z",
+  "source": {
+    "label": "source",
+    "endpoint": "http://localhost:9000",
+    "secure": false,
+    "accessKey": "minioadmin"
+  },
+  "target": {
+    "label": "target",
+    "endpoint": "http://localhost:9002",
+    "secure": false,
+    "accessKey": "minioadmin"
+  },
+  "options": {
+    "allBuckets": false,
+    "checkTags": true,
+    "concurrency": 8,
+    "deepOnInconclusive": true,
+    "failOnExtra": true,
+    "ignoreMetaKeys": null,
+    "level": 2,
+    "maxDeepBytes": 0,
+    "prefix": "",
+    "smokeTest": false,
+    "versions": "auto"
+  },
+  "status": "FAIL",
+  "checks": [
+    {
+      "name": "Source Connectivity",
+      "status": "PASS",
+      "detail": "http://localhost:9000 reachable, credentials accepted (2 buckets visible)"
+    },
+    {
+      "name": "Target Connectivity",
+      "status": "PASS",
+      "detail": "http://localhost:9002 reachable, credentials accepted (2 buckets visible)"
+    }
+  ],
+  "buckets": [
+    {
+      "sourceBucket": "verify-selftest",
+      "targetBucket": "verify-selftest",
+      "status": "FAIL",
+      "checks": [
+        {
+          "name": "Bucket Exists",
+          "status": "PASS",
+          "source": "yes",
+          "target": "yes"
+        },
+        {
+          "name": "Versioning",
+          "status": "PASS",
+          "source": "none",
+          "target": "none"
+        },
+        {
+          "name": "Object Lock",
+          "status": "PASS",
+          "source": "none",
+          "target": "none"
+        },
+        {
+          "name": "Bucket Tags",
+          "status": "PASS",
+          "source": "none",
+          "target": "none"
+        },
+        {
+          "name": "Bucket Policy",
+          "status": "PASS",
+          "source": "none",
+          "target": "none"
+        },
+        {
+          "name": "Lifecycle",
+          "status": "PASS",
+          "source": "none",
+          "target": "none"
+        },
+        {
+          "name": "Encryption",
+          "status": "PASS",
+          "source": "none",
+          "target": "none"
+        },
+        {
+          "name": "Object Listing",
+          "status": "PASS",
+          "detail": "listed 8 source / 7 target objects"
+        },
+        {
+          "name": "Object Count",
+          "status": "FAIL",
+          "detail": "object counts differ",
+          "source": "8",
+          "target": "7"
+        },
+        {
+          "name": "Object Names",
+          "status": "FAIL",
+          "detail": "1 missing on target: missing.txt"
+        },
+        {
+          "name": "Object Size",
+          "status": "FAIL",
+          "detail": "1 mismatched of 7"
+        },
+        {
+          "name": "Checksum / ETag",
+          "status": "FAIL",
+          "detail": "2 mismatched"
+        },
+        {
+          "name": "Content Type",
+          "status": "FAIL",
+          "detail": "1 mismatched of 7"
+        },
+        {
+          "name": "Metadata",
+          "status": "FAIL",
+          "detail": "1 mismatched of 7"
+        },
+        {
+          "name": "Tags",
+          "status": "FAIL",
+          "detail": "1 mismatched of 7"
+        },
+        {
+          "name": "Content (SHA-256)",
+          "status": "PASS",
+          "detail": "1 objects fully hashed on both sides"
+        },
+        {
+          "name": "Versions",
+          "status": "N/A",
+          "detail": "bucket is not versioned"
+        }
+      ],
+      "summary": {
+        "sourceObjects": 8,
+        "targetObjects": 7,
+        "sourceBytes": 6000039,
+        "targetBytes": 6000029,
+        "matchedObjects": 2,
+        "missingObjects": 1,
+        "extraObjects": 0,
+        "mismatchedObjects": 5,
+        "errorObjects": 0,
+        "etagInconclusive": 0,
+        "deepVerified": 1,
+        "deepBytes": 12000000
+      },
+      "objects": [
+        {
+          "key": "ct.txt",
+          "status": "FAIL",
+          "reasons": [
+            "contentType"
+          ],
+          "detail": "content-type \"text/plain\" != \"application/json\"",
+          "source": {
+            "size": 3,
+            "etag": "dfdc3f4262cb34359789d5aed14f99cd",
+            "contentType": "text/plain",
+            "lastModified": "2026-09-12T16:14:00.189Z",
+            "storageClass": "STANDARD"
+          },
+          "target": {
+            "size": 3,
+            "etag": "dfdc3f4262cb34359789d5aed14f99cd",
+            "contentType": "application/json",
+            "lastModified": "2026-09-12T16:14:00.256Z",
+            "storageClass": "STANDARD"
+          }
+        },
+        {
+          "key": "etag.txt",
+          "status": "FAIL",
+          "reasons": [
+            "etag"
+          ],
+          "detail": "etag f5ac8127b3b6b85cdc13f237c6005d80 != 971bd7f7fc7236766e87b3cbacdfebd7",
+          "source": {
+            "size": 5,
+            "etag": "f5ac8127b3b6b85cdc13f237c6005d80",
+            "contentType": "text/plain",
+            "lastModified": "2026-09-12T16:14:00.062Z",
+            "storageClass": "STANDARD"
+          },
+          "target": {
+            "size": 5,
+            "etag": "971bd7f7fc7236766e87b3cbacdfebd7",
+            "contentType": "text/plain",
+            "lastModified": "2026-09-12T16:14:00.126Z",
+            "storageClass": "STANDARD"
+          }
+        },
+        {
+          "key": "meta.txt",
+          "status": "FAIL",
+          "reasons": [
+            "metadata"
+          ],
+          "detail": "metadata: x-amz-meta-env missing on target (source=\"prod\"), x-amz-meta-owner \"alice\" != \"bob\"",
+          "source": {
+            "size": 5,
+            "etag": "fe999c04c29b51909b8ec56ecfbabcb8",
+            "contentType": "text/plain",
+            "lastModified": "2026-09-12T16:14:00.322Z",
+            "storageClass": "STANDARD",
+            "metadata": {
+              "x-amz-meta-env": "prod",
+              "x-amz-meta-owner": "alice"
+            }
+          },
+          "target": {
+            "size": 5,
+            "etag": "fe999c04c29b51909b8ec56ecfbabcb8",
+            "contentType": "text/plain",
+            "lastModified": "2026-09-12T16:14:00.385Z",
+            "storageClass": "STANDARD",
+            "metadata": {
+              "x-amz-meta-owner": "bob"
+            }
+          }
+        },
+        {
+          "key": "missing.txt",
+          "status": "FAIL",
+          "reasons": [
+            "missing"
+          ],
+          "detail": "present on source, absent on target",
+          "source": {
+            "size": 12,
+            "etag": "794793dbcea3fae57da3431f2c4a9dd1",
+            "lastModified": "2026-09-12T16:14:00.575Z",
+            "storageClass": "STANDARD"
+          }
+        },
+        {
+          "key": "sizediff.txt",
+          "status": "FAIL",
+          "reasons": [
+            "size",
+            "etag"
+          ],
+          "detail": "size 5 != 7; etag ae5b468c7707a1f3d36c49b1fe2ef850 != 41e9bbd8134b008051cb7018783e9007",
+          "source": {
+            "size": 5,
+            "etag": "ae5b468c7707a1f3d36c49b1fe2ef850",
+            "contentType": "text/plain",
+            "lastModified": "2026-09-12T16:13:59.931Z",
+            "storageClass": "STANDARD"
+          },
+          "target": {
+            "size": 7,
+            "etag": "41e9bbd8134b008051cb7018783e9007",
+            "contentType": "text/plain",
+            "lastModified": "2026-09-12T16:13:59.996Z",
+            "storageClass": "STANDARD"
+          }
+        },
+        {
+          "key": "tag.txt",
+          "status": "FAIL",
+          "reasons": [
+            "tags"
+          ],
+          "detail": "tags: team \"a\" != \"b\"",
+          "source": {
+            "size": 4,
+            "etag": "31375aebb8d31ea683bfa31eb04e1c38",
+            "contentType": "text/plain",
+            "lastModified": "2026-09-12T16:14:00.448Z",
+            "storageClass": "STANDARD",
+            "tags": {
+              "team": "a"
+            }
+          },
+          "target": {
+            "size": 4,
+            "etag": "31375aebb8d31ea683bfa31eb04e1c38",
+            "contentType": "text/plain",
+            "lastModified": "2026-09-12T16:14:00.512Z",
+            "storageClass": "STANDARD",
+            "tags": {
+              "team": "b"
+            }
+          }
+        }
+      ],
+      "elapsed": "71ms"
+    }
+  ],
+  "totals": {
+    "sourceObjects": 8,
+    "targetObjects": 7,
+    "sourceBytes": 6000039,
+    "targetBytes": 6000029,
+    "matchedObjects": 2,
+    "missingObjects": 1,
+    "extraObjects": 0,
+    "mismatchedObjects": 5,
+    "errorObjects": 0,
+    "etagInconclusive": 0,
+    "deepVerified": 1,
+    "deepBytes": 12000000
+  },
+  "elapsed": "78ms",
+  "limitations": [
+    "ETag equality is used as the content check: it is the MD5 of the object for single-part, unencrypted uploads and is therefore a reliable content fingerprint in that case.",
+    "Multipart ETags (suffix -N) depend on part size and encrypted objects (SSE) have non-MD5 ETags; when such ETags differ the object is marked inconclusive and, with --deep-on-inconclusive (default), both copies are downloaded and compared by SHA-256.",
+    "Version IDs are server-generated and cannot survive an S3-level migration; version histories are compared by ordered (delete-marker, size, ETag) sequence instead.",
+    "Object LastModified timestamps are not compared: the target timestamp is the migration time, not the original.",
+    "Bucket policies, lifecycle, tags and encryption configuration are compared for equality only; semantic equivalence (e.g. differently formatted but equivalent policies) beyond JSON key ordering is not detected.",
+    "ACLs, object retention/legal-hold per object, and bucket notification/replication configuration are not compared."
+  ]
+}

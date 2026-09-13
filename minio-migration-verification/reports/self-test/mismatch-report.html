@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<title>MinIO Migration Verification — FAIL</title>
+<style>
+:root{--pass:#1a7f37;--fail:#c62828;--warn:#b26a00;--na:#666;--bg:#fff;--fg:#1b1b1b;--muted:#666;--line:#e3e3e3;--code:#f4f4f4}
+@media(prefers-color-scheme:dark){:root{--bg:#121417;--fg:#e6e6e6;--muted:#9a9a9a;--line:#2b2f36;--code:#1c2027;--pass:#3fb950;--fail:#f85149;--warn:#d29922;--na:#8b949e}}
+body{font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--fg);margin:0;padding:24px;max-width:1100px}
+h1{font-size:22px;margin:0 0 4px}h2{font-size:17px;margin:28px 0 8px;border-bottom:1px solid var(--line);padding-bottom:4px}
+.muted{color:var(--muted)}.badge{display:inline-block;padding:2px 10px;border-radius:12px;font-weight:600;color:#fff;font-size:12px;letter-spacing:.3px}
+.s-pass{background:var(--pass)}.s-fail{background:var(--fail)}.s-error{background:var(--fail)}.s-warn{background:var(--warn)}.s-n\/a,.s-skipped{background:var(--na)}
+.hero{display:flex;align-items:center;gap:16px;margin:12px 0 20px}.hero .big{font-size:28px;padding:6px 18px;border-radius:8px}
+table{border-collapse:collapse;width:100%;margin:8px 0}th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}th{font-weight:600;color:var(--muted);font-size:12px;text-transform:uppercase}
+code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;background:var(--code);border-radius:4px}code{padding:1px 4px}pre{padding:8px;overflow:auto;max-height:280px;margin:0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:10px 0}.tile{border:1px solid var(--line);border-radius:8px;padding:10px}.tile .v{font-size:22px;font-weight:600}.tile .k{font-size:12px;color:var(--muted)}
+details{margin:6px 0}summary{cursor:pointer}ul.lim{margin:4px 0 0 18px}
+</style></head><body>
+<h1>MinIO Migration Verification</h1>
+<div class="muted">migration-verify 0.1.0 · generated 2026-09-12 16:14:15 UTC · elapsed 78ms</div>
+<div class="hero"><span class="badge big s-fail">FAIL</span>
+<div><div><b>Source:</b> source <code>http://localhost:9000</code></div><div><b>Target:</b> target <code>http://localhost:9002</code></div></div></div>
+
+<div class="grid">
+<div class="tile"><div class="v">8</div><div class="k">source objects (5.7 MiB)</div></div>
+<div class="tile"><div class="v">7</div><div class="k">target objects (5.7 MiB)</div></div>
+<div class="tile"><div class="v">2</div><div class="k">matched</div></div>
+<div class="tile"><div class="v">1</div><div class="k">missing on target</div></div>
+<div class="tile"><div class="v">0</div><div class="k">extra on target</div></div>
+<div class="tile"><div class="v">5</div><div class="k">mismatched</div></div>
+<div class="tile"><div class="v">1</div><div class="k">deep verified (11.4 MiB)</div></div>
+</div>
+
+<h2>Global checks</h2>
+<table><tr><th>Check</th><th>Status</th><th>Detail</th></tr>
+<tr><td>Source Connectivity</td><td><span class="badge s-pass">PASS</span></td><td>http://localhost:9000 reachable, credentials accepted (2 buckets visible)</td></tr><tr><td>Target Connectivity</td><td><span class="badge s-pass">PASS</span></td><td>http://localhost:9002 reachable, credentials accepted (2 buckets visible)</td></tr>
+</table>
+
+
+<h2>Bucket <code>verify-selftest</code> → <code>verify-selftest</code> <span class="badge s-fail">FAIL</span></h2>
+<table><tr><th>Check</th><th>Status</th><th>Source</th><th>Target</th><th>Detail</th></tr>
+<tr><td>Bucket Exists</td><td><span class="badge s-pass">PASS</span></td><td>yes</td><td>yes</td><td></td></tr><tr><td>Versioning</td><td><span class="badge s-pass">PASS</span></td><td>none</td><td>none</td><td></td></tr><tr><td>Object Lock</td><td><span class="badge s-pass">PASS</span></td><td>none</td><td>none</td><td></td></tr><tr><td>Bucket Tags</td><td><span class="badge s-pass">PASS</span></td><td>none</td><td>none</td><td></td></tr><tr><td>Bucket Policy</td><td><span class="badge s-pass">PASS</span></td><td>none</td><td>none</td><td></td></tr><tr><td>Lifecycle</td><td><span class="badge s-pass">PASS</span></td><td>none</td><td>none</td><td></td></tr><tr><td>Encryption</td><td><span class="badge s-pass">PASS</span></td><td>none</td><td>none</td><td></td></tr><tr><td>Object Listing</td><td><span class="badge s-pass">PASS</span></td><td></td><td></td><td>listed 8 source / 7 target objects</td></tr><tr><td>Object Count</td><td><span class="badge s-fail">FAIL</span></td><td>8</td><td>7</td><td>object counts differ</td></tr><tr><td>Object Names</td><td><span class="badge s-fail">FAIL</span></td><td></td><td></td><td>1 missing on target: missing.txt</td></tr><tr><td>Object Size</td><td><span class="badge s-fail">FAIL</span></td><td></td><td></td><td>1 mismatched of 7</td></tr><tr><td>Checksum / ETag</td><td><span class="badge s-fail">FAIL</span></td><td></td><td></td><td>2 mismatched</td></tr><tr><td>Content Type</td><td><span class="badge s-fail">FAIL</span></td><td></td><td></td><td>1 mismatched of 7</td></tr><tr><td>Metadata</td><td><span class="badge s-fail">FAIL</span></td><td></td><td></td><td>1 mismatched of 7</td></tr><tr><td>Tags</td><td><span class="badge s-fail">FAIL</span></td><td></td><td></td><td>1 mismatched of 7</td></tr><tr><td>Content (SHA-256)</td><td><span class="badge s-pass">PASS</span></td><td></td><td></td><td>1 objects fully hashed on both sides</td></tr><tr><td>Versions</td><td><span class="badge s-n/a">N/A</span></td><td></td><td></td><td>bucket is not versioned</td></tr>
+</table>
+<div class="grid">
+<div class="tile"><div class="v">8</div><div class="k">source objects</div></div>
+<div class="tile"><div class="v">7</div><div class="k">target objects</div></div>
+<div class="tile"><div class="v">2</div><div class="k">matched</div></div>
+<div class="tile"><div class="v">1</div><div class="k">missing</div></div>
+<div class="tile"><div class="v">0</div><div class="k">extra</div></div>
+<div class="tile"><div class="v">5</div><div class="k">mismatched</div></div>
+
+
+
+</div>
+
+<h3>Object details (6)</h3>
+<table><tr><th>Status</th><th>Key</th><th>Reasons</th><th>Detail</th><th>Source</th><th>Target</th></tr>
+<tr><td><span class="badge s-fail">FAIL</span></td><td><code>ct.txt</code></td><td>contentType</td><td>content-type &#34;text/plain&#34; != &#34;application/json&#34;</td>
+<td><details><summary>3 B · <code>dfdc3f4262cb34359789d5aed14f99cd</code></summary><pre>{
+  &#34;size&#34;: 3,
+  &#34;etag&#34;: &#34;dfdc3f4262cb34359789d5aed14f99cd&#34;,
+  &#34;contentType&#34;: &#34;text/plain&#34;,
+  &#34;lastModified&#34;: &#34;2026-09-12T16:14:00.189Z&#34;,
+  &#34;storageClass&#34;: &#34;STANDARD&#34;
+}</pre></details></td>
+<td><details><summary>3 B · <code>dfdc3f4262cb34359789d5aed14f99cd</code></summary><pre>{
+  &#34;size&#34;: 3,
+  &#34;etag&#34;: &#34;dfdc3f4262cb34359789d5aed14f99cd&#34;,
+  &#34;contentType&#34;: &#34;application/json&#34;,
+  &#34;lastModified&#34;: &#34;2026-09-12T16:14:00.256Z&#34;,
+  &#34;storageClass&#34;: &#34;STANDARD&#34;
+}</pre></details></td></tr><tr><td><span class="badge s-fail">FAIL</span></td><td><code>etag.txt</code></td><td>etag</td><td>etag f5ac8127b3b6b85cdc13f237c6005d80 != 971bd7f7fc7236766e87b3cbacdfebd7</td>
+<td><details><summary>5 B · <code>f5ac8127b3b6b85cdc13f237c6005d80</code></summary><pre>{
+  &#34;size&#34;: 5,
+  &#34;etag&#34;: &#34;f5ac8127b3b6b85cdc13f237c6005d80&#34;,
+  &#34;contentType&#34;: &#34;text/plain&#34;,
+  &#34;lastModified&#34;: &#34;2026-09-12T16:14:00.062Z&#34;,
+  &#34;storageClass&#34;: &#34;STANDARD&#34;
+}</pre></details></td>
+<td><details><summary>5 B · <code>971bd7f7fc7236766e87b3cbacdfebd7</code></summary><pre>{
+  &#34;size&#34;: 5,
+  &#34;etag&#34;: &#34;971bd7f7fc7236766e87b3cbacdfebd7&#34;,
+  &#34;contentType&#34;: &#34;text/plain&#34;,
+  &#34;lastModified&#34;: &#34;2026-09-12T16:14:00.126Z&#34;,
+  &#34;storageClass&#34;: &#34;STANDARD&#34;
+}</pre></details></td></tr><tr><td><span class="badge s-fail">FAIL</span></td><td><code>meta.txt</code></td><td>metadata</td><td>metadata: x-amz-meta-env missing on target (source=&#34;prod&#34;), x-amz-meta-owner &#34;alice&#34; != &#34;bob&#34;</td>
+<td><details><summary>5 B · <code>fe999c04c29b51909b8ec56ecfbabcb8</code></summary><pre>{
+  &#34;size&#34;: 5,
+  &#34;etag&#34;: &#34;fe999c04c29b51909b8ec56ecfbabcb8&#34;,
+  &#34;contentType&#34;: &#34;text/plain&#34;,
+  &#34;lastModified&#34;: &#34;2026-09-12T16:14:00.322Z&#34;,
+  &#34;storageClass&#34;: &#34;STANDARD&#34;,
+  &#34;metadata&#34;: {
+    &#34;x-amz-meta-env&#34;: &#34;prod&#34;,
+    &#34;x-amz-meta-owner&#34;: &#34;alice&#34;
+  }
+}</pre></details></td>
+<td><details><summary>5 B · <code>fe999c04c29b51909b8ec56ecfbabcb8</code></summary><pre>{
+  &#34;size&#34;: 5,
+  &#34;etag&#34;: &#34;fe999c04c29b51909b8ec56ecfbabcb8&#34;,
+  &#34;contentType&#34;: &#34;text/plain&#34;,
+  &#34;lastModified&#34;: &#34;2026-09-12T16:14:00.385Z&#34;,
+  &#34;storageClass&#34;: &#34;STANDARD&#34;,
+  &#34;metadata&#34;: {
+    &#34;x-amz-meta-owner&#34;: &#34;bob&#34;
+  }
+}</pre></details></td></tr><tr><td><span class="badge s-fail">FAIL</span></td><td><code>missing.txt</code></td><td>missing</td><td>present on source, absent on target</td>
+<td><details><summary>12 B · <code>794793dbcea3fae57da3431f2c4a9dd1</code></summary><pre>{
+  &#34;size&#34;: 12,
+  &#34;etag&#34;: &#34;794793dbcea3fae57da3431f2c4a9dd1&#34;,
+  &#34;lastModified&#34;: &#34;2026-09-12T16:14:00.575Z&#34;,
+  &#34;storageClass&#34;: &#34;STANDARD&#34;
+}</pre></details></td>
+<td><span class="muted">absent</span></td></tr><tr><td><span class="badge s-fail">FAIL</span></td><td><code>sizediff.txt</code></td><td>size, etag</td><td>size 5 != 7; etag ae5b468c7707a1f3d36c49b1fe2ef850 != 41e9bbd8134b008051cb7018783e9007</td>
+<td><details><summary>5 B · <code>ae5b468c7707a1f3d36c49b1fe2ef850</code></summary><pre>{
+  &#34;size&#34;: 5,
+  &#34;etag&#34;: &#34;ae5b468c7707a1f3d36c49b1fe2ef850&#34;,
+  &#34;contentType&#34;: &#34;text/plain&#34;,
+  &#34;lastModified&#34;: &#34;2026-09-12T16:13:59.931Z&#34;,
+  &#34;storageClass&#34;: &#34;STANDARD&#34;
+}</pre></details></td>
+<td><details><summary>7 B · <code>41e9bbd8134b008051cb7018783e9007</code></summary><pre>{
+  &#34;size&#34;: 7,
+  &#34;etag&#34;: &#34;41e9bbd8134b008051cb7018783e9007&#34;,
+  &#34;contentType&#34;: &#34;text/plain&#34;,
+  &#34;lastModified&#34;: &#34;2026-09-12T16:13:59.996Z&#34;,
+  &#34;storageClass&#34;: &#34;STANDARD&#34;
+}</pre></details></td></tr><tr><td><span class="badge s-fail">FAIL</span></td><td><code>tag.txt</code></td><td>tags</td><td>tags: team &#34;a&#34; != &#34;b&#34;</td>
+<td><details><summary>4 B · <code>31375aebb8d31ea683bfa31eb04e1c38</code></summary><pre>{
+  &#34;size&#34;: 4,
+  &#34;etag&#34;: &#34;31375aebb8d31ea683bfa31eb04e1c38&#34;,
+  &#34;contentType&#34;: &#34;text/plain&#34;,
+  &#34;lastModified&#34;: &#34;2026-09-12T16:14:00.448Z&#34;,
+  &#34;storageClass&#34;: &#34;STANDARD&#34;,
+  &#34;tags&#34;: {
+    &#34;team&#34;: &#34;a&#34;
+  }
+}</pre></details></td>
+<td><details><summary>4 B · <code>31375aebb8d31ea683bfa31eb04e1c38</code></summary><pre>{
+  &#34;size&#34;: 4,
+  &#34;etag&#34;: &#34;31375aebb8d31ea683bfa31eb04e1c38&#34;,
+  &#34;contentType&#34;: &#34;text/plain&#34;,
+  &#34;lastModified&#34;: &#34;2026-09-12T16:14:00.512Z&#34;,
+  &#34;storageClass&#34;: &#34;STANDARD&#34;,
+  &#34;tags&#34;: {
+    &#34;team&#34;: &#34;b&#34;
+  }
+}</pre></details></td></tr>
+</table>
+
+
+
+<h2>Notes and limitations</h2><ul class="lim"><li>ETag equality is used as the content check: it is the MD5 of the object for single-part, unencrypted uploads and is therefore a reliable content fingerprint in that case.</li><li>Multipart ETags (suffix -N) depend on part size and encrypted objects (SSE) have non-MD5 ETags; when such ETags differ the object is marked inconclusive and, with --deep-on-inconclusive (default), both copies are downloaded and compared by SHA-256.</li><li>Version IDs are server-generated and cannot survive an S3-level migration; version histories are compared by ordered (delete-marker, size, ETag) sequence instead.</li><li>Object LastModified timestamps are not compared: the target timestamp is the migration time, not the original.</li><li>Bucket policies, lifecycle, tags and encryption configuration are compared for equality only; semantic equivalence (e.g. differently formatted but equivalent policies) beyond JSON key ordering is not detected.</li><li>ACLs, object retention/legal-hold per object, and bucket notification/replication configuration are not compared.</li></ul>
+<h2>Run options</h2><pre>{
+  &#34;allBuckets&#34;: false,
+  &#34;checkTags&#34;: true,
+  &#34;concurrency&#34;: 8,
+  &#34;deepOnInconclusive&#34;: true,
+  &#34;failOnExtra&#34;: true,
+  &#34;ignoreMetaKeys&#34;: null,
+  &#34;level&#34;: 2,
+  &#34;maxDeepBytes&#34;: 0,
+  &#34;prefix&#34;: &#34;&#34;,
+  &#34;smokeTest&#34;: false,
+  &#34;versions&#34;: &#34;auto&#34;
+}</pre>
+</body></html>

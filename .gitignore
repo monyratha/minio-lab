@@ -1,0 +1,9 @@
+.DS_Store
+# live MinIO data directories (bind-mounted into the containers)
+minio-a/data/
+minio-b/data/
+# upstream clone of github.com/clyso/chorus; lab changes are in chorus-lab-config.patch
+chorus/
+# build output
+minio-migration-verification/bin/
+.idea/

@@ -1,0 +1,277 @@
+{
+  "tool": "migration-verify",
+  "version": "0.1.0",
+  "generatedAt": "2026-09-12T16:15:27.416258Z",
+  "source": {
+    "label": "MinIO A",
+    "endpoint": "http://localhost:9000",
+    "secure": false,
+    "accessKey": "minioadmin"
+  },
+  "target": {
+    "label": "MinIO B",
+    "endpoint": "http://localhost:9002",
+    "secure": false,
+    "accessKey": "minioadmin"
+  },
+  "options": {
+    "allBuckets": false,
+    "checkTags": true,
+    "concurrency": 8,
+    "deepOnInconclusive": true,
+    "failOnExtra": true,
+    "ignoreMetaKeys": null,
+    "level": 3,
+    "maxDeepBytes": 0,
+    "prefix": "",
+    "smokeTest": false,
+    "versions": "auto"
+  },
+  "status": "PASS",
+  "checks": [
+    {
+      "name": "Source Connectivity",
+      "status": "PASS",
+      "detail": "http://localhost:9000 reachable, credentials accepted (1 buckets visible)"
+    },
+    {
+      "name": "Target Connectivity",
+      "status": "PASS",
+      "detail": "http://localhost:9002 reachable, credentials accepted (1 buckets visible)"
+    }
+  ],
+  "buckets": [
+    {
+      "sourceBucket": "migration-test",
+      "targetBucket": "migration-test",
+      "status": "PASS",
+      "checks": [
+        {
+          "name": "Bucket Exists",
+          "status": "PASS",
+          "source": "yes",
+          "target": "yes"
+        },
+        {
+          "name": "Versioning",
+          "status": "PASS",
+          "source": "none",
+          "target": "none"
+        },
+        {
+          "name": "Object Lock",
+          "status": "PASS",
+          "source": "none",
+          "target": "none"
+        },
+        {
+          "name": "Bucket Tags",
+          "status": "PASS",
+          "source": "none",
+          "target": "none"
+        },
+        {
+          "name": "Bucket Policy",
+          "status": "PASS",
+          "source": "none",
+          "target": "none"
+        },
+        {
+          "name": "Lifecycle",
+          "status": "PASS",
+          "source": "none",
+          "target": "none"
+        },
+        {
+          "name": "Encryption",
+          "status": "PASS",
+          "source": "none",
+          "target": "none"
+        },
+        {
+          "name": "Object Listing",
+          "status": "PASS",
+          "detail": "listed 4 source / 4 target objects"
+        },
+        {
+          "name": "Object Count",
+          "status": "PASS",
+          "source": "4",
+          "target": "4"
+        },
+        {
+          "name": "Object Names",
+          "status": "PASS",
+          "detail": "4 common"
+        },
+        {
+          "name": "Object Size",
+          "status": "PASS",
+          "detail": "4 of 4 compared"
+        },
+        {
+          "name": "Checksum / ETag",
+          "status": "PASS",
+          "detail": "4 of 4 match"
+        },
+        {
+          "name": "Content Type",
+          "status": "PASS",
+          "detail": "4 of 4 compared"
+        },
+        {
+          "name": "Metadata",
+          "status": "PASS",
+          "detail": "4 of 4 compared"
+        },
+        {
+          "name": "Tags",
+          "status": "PASS",
+          "detail": "4 of 4 compared"
+        },
+        {
+          "name": "Content (SHA-256)",
+          "status": "PASS",
+          "detail": "4 objects fully hashed on both sides"
+        },
+        {
+          "name": "Versions",
+          "status": "N/A",
+          "detail": "bucket is not versioned"
+        }
+      ],
+      "summary": {
+        "sourceObjects": 4,
+        "targetObjects": 4,
+        "sourceBytes": 10485813,
+        "targetBytes": 10485813,
+        "matchedObjects": 4,
+        "missingObjects": 0,
+        "extraObjects": 0,
+        "mismatchedObjects": 0,
+        "errorObjects": 0,
+        "etagInconclusive": 0,
+        "deepVerified": 4,
+        "deepBytes": 20971626
+      },
+      "objects": [
+        {
+          "key": "file1.txt",
+          "status": "PASS",
+          "reasons": [
+            "deep-verified"
+          ],
+          "source": {
+            "size": 19,
+            "etag": "c088939e04b16763fd82c3ada1e24a7f",
+            "contentType": "text/plain",
+            "lastModified": "2026-09-12T15:16:29.859Z",
+            "storageClass": "STANDARD",
+            "sha256": "d1856fba4ec0aeeaa875c482c16ecdb4674ec2029e30b610a4c670a80776eb1d"
+          },
+          "target": {
+            "size": 19,
+            "etag": "c088939e04b16763fd82c3ada1e24a7f",
+            "contentType": "text/plain",
+            "lastModified": "2026-09-12T16:05:11.36Z",
+            "storageClass": "STANDARD",
+            "sha256": "d1856fba4ec0aeeaa875c482c16ecdb4674ec2029e30b610a4c670a80776eb1d"
+          }
+        },
+        {
+          "key": "file2.txt",
+          "status": "PASS",
+          "reasons": [
+            "deep-verified"
+          ],
+          "source": {
+            "size": 22,
+            "etag": "5d615834de9f1e5fb64497c6123fbb91",
+            "contentType": "text/plain",
+            "lastModified": "2026-09-12T15:16:29.93Z",
+            "storageClass": "STANDARD",
+            "sha256": "b14040daf791034855b22ad5453b47728a4cff9242ad556e5f10b7f61fa2d1c4"
+          },
+          "target": {
+            "size": 22,
+            "etag": "5d615834de9f1e5fb64497c6123fbb91",
+            "contentType": "text/plain",
+            "lastModified": "2026-09-12T16:05:11.36Z",
+            "storageClass": "STANDARD",
+            "sha256": "b14040daf791034855b22ad5453b47728a4cff9242ad556e5f10b7f61fa2d1c4"
+          }
+        },
+        {
+          "key": "file3.bin",
+          "status": "PASS",
+          "reasons": [
+            "deep-verified"
+          ],
+          "source": {
+            "size": 10485760,
+            "etag": "f1c9645dbc14efddc7d8a322685f26eb",
+            "contentType": "application/octet-stream",
+            "lastModified": "2026-09-12T15:16:30.08Z",
+            "storageClass": "STANDARD",
+            "sha256": "e5b844cc57f57094ea4585e235f36c78c1cd222262bb89d53c94dcb4d6b3e55d"
+          },
+          "target": {
+            "size": 10485760,
+            "etag": "f1c9645dbc14efddc7d8a322685f26eb",
+            "contentType": "application/octet-stream",
+            "lastModified": "2026-09-12T16:05:11.385Z",
+            "storageClass": "STANDARD",
+            "sha256": "e5b844cc57f57094ea4585e235f36c78c1cd222262bb89d53c94dcb4d6b3e55d"
+          }
+        },
+        {
+          "key": "hello.txt",
+          "status": "PASS",
+          "reasons": [
+            "deep-verified"
+          ],
+          "source": {
+            "size": 12,
+            "etag": "ba4aae7b7c72dcdee71af2d5a0843d70",
+            "contentType": "text/plain",
+            "lastModified": "2026-09-12T15:06:29.184Z",
+            "storageClass": "STANDARD",
+            "sha256": "6cbc1a31cfb7d703995ebd1f461360f544a1a0c6c8b41349328144de906a1335"
+          },
+          "target": {
+            "size": 12,
+            "etag": "ba4aae7b7c72dcdee71af2d5a0843d70",
+            "contentType": "text/plain",
+            "lastModified": "2026-09-12T16:05:11.36Z",
+            "storageClass": "STANDARD",
+            "sha256": "6cbc1a31cfb7d703995ebd1f461360f544a1a0c6c8b41349328144de906a1335"
+          }
+        }
+      ],
+      "elapsed": "92ms"
+    }
+  ],
+  "totals": {
+    "sourceObjects": 4,
+    "targetObjects": 4,
+    "sourceBytes": 10485813,
+    "targetBytes": 10485813,
+    "matchedObjects": 4,
+    "missingObjects": 0,
+    "extraObjects": 0,
+    "mismatchedObjects": 0,
+    "errorObjects": 0,
+    "etagInconclusive": 0,
+    "deepVerified": 4,
+    "deepBytes": 20971626
+  },
+  "elapsed": "97ms",
+  "limitations": [
+    "ETag equality is used as the content check: it is the MD5 of the object for single-part, unencrypted uploads and is therefore a reliable content fingerprint in that case.",
+    "Multipart ETags (suffix -N) depend on part size and encrypted objects (SSE) have non-MD5 ETags; when such ETags differ the object is marked inconclusive and, with --deep-on-inconclusive (default), both copies are downloaded and compared by SHA-256.",
+    "Version IDs are server-generated and cannot survive an S3-level migration; version histories are compared by ordered (delete-marker, size, ETag) sequence instead.",
+    "Object LastModified timestamps are not compared: the target timestamp is the migration time, not the original.",
+    "Bucket policies, lifecycle, tags and encryption configuration are compared for equality only; semantic equivalence (e.g. differently formatted but equivalent policies) beyond JSON key ordering is not detected.",
+    "ACLs, object retention/legal-hold per object, and bucket notification/replication configuration are not compared."
+  ]
+}

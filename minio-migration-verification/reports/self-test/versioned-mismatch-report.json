@@ -1,0 +1,231 @@
+{
+  "tool": "migration-verify",
+  "version": "0.1.0",
+  "generatedAt": "2026-09-12T16:14:42.77622Z",
+  "source": {
+    "label": "source",
+    "endpoint": "http://localhost:9000",
+    "secure": false,
+    "accessKey": "minioadmin"
+  },
+  "target": {
+    "label": "target",
+    "endpoint": "http://localhost:9002",
+    "secure": false,
+    "accessKey": "minioadmin"
+  },
+  "options": {
+    "allBuckets": false,
+    "checkTags": true,
+    "concurrency": 8,
+    "deepOnInconclusive": true,
+    "failOnExtra": true,
+    "ignoreMetaKeys": null,
+    "level": 2,
+    "maxDeepBytes": 0,
+    "prefix": "",
+    "smokeTest": false,
+    "versions": "auto"
+  },
+  "status": "FAIL",
+  "checks": [
+    {
+      "name": "Source Connectivity",
+      "status": "PASS",
+      "detail": "http://localhost:9000 reachable, credentials accepted (3 buckets visible)"
+    },
+    {
+      "name": "Target Connectivity",
+      "status": "PASS",
+      "detail": "http://localhost:9002 reachable, credentials accepted (3 buckets visible)"
+    }
+  ],
+  "buckets": [
+    {
+      "sourceBucket": "verify-selftest-v",
+      "targetBucket": "verify-selftest-v",
+      "status": "FAIL",
+      "checks": [
+        {
+          "name": "Bucket Exists",
+          "status": "PASS",
+          "source": "yes",
+          "target": "yes"
+        },
+        {
+          "name": "Versioning",
+          "status": "PASS",
+          "source": "Enabled",
+          "target": "Enabled"
+        },
+        {
+          "name": "Object Lock",
+          "status": "PASS",
+          "source": "none",
+          "target": "none"
+        },
+        {
+          "name": "Bucket Tags",
+          "status": "PASS",
+          "source": "none",
+          "target": "none"
+        },
+        {
+          "name": "Bucket Policy",
+          "status": "PASS",
+          "source": "none",
+          "target": "none"
+        },
+        {
+          "name": "Lifecycle",
+          "status": "PASS",
+          "source": "none",
+          "target": "none"
+        },
+        {
+          "name": "Encryption",
+          "status": "PASS",
+          "source": "none",
+          "target": "none"
+        },
+        {
+          "name": "Object Listing",
+          "status": "PASS",
+          "detail": "listed 2 source / 3 target objects"
+        },
+        {
+          "name": "Object Count",
+          "status": "FAIL",
+          "detail": "object counts differ",
+          "source": "2",
+          "target": "3"
+        },
+        {
+          "name": "Object Names",
+          "status": "FAIL",
+          "detail": "2 common; 1 extra on target: d.txt"
+        },
+        {
+          "name": "Object Size",
+          "status": "PASS",
+          "detail": "2 of 2 compared"
+        },
+        {
+          "name": "Checksum / ETag",
+          "status": "PASS",
+          "detail": "2 of 2 match"
+        },
+        {
+          "name": "Content Type",
+          "status": "PASS",
+          "detail": "2 of 2 compared"
+        },
+        {
+          "name": "Metadata",
+          "status": "PASS",
+          "detail": "2 of 2 compared"
+        },
+        {
+          "name": "Tags",
+          "status": "PASS",
+          "detail": "2 of 2 compared"
+        },
+        {
+          "name": "Content (SHA-256)",
+          "status": "SKIPPED",
+          "detail": "not needed: all comparable ETags matched (use --level 3 to force)"
+        },
+        {
+          "name": "Versions",
+          "status": "FAIL",
+          "detail": "2 keys with differing version history",
+          "source": "6",
+          "target": "4"
+        }
+      ],
+      "summary": {
+        "sourceObjects": 2,
+        "targetObjects": 3,
+        "sourceBytes": 6,
+        "targetBytes": 9,
+        "matchedObjects": 2,
+        "missingObjects": 0,
+        "extraObjects": 1,
+        "mismatchedObjects": 0,
+        "errorObjects": 0,
+        "etagInconclusive": 0,
+        "deepVerified": 0,
+        "deepBytes": 0,
+        "sourceVersions": 6,
+        "targetVersions": 4,
+        "versionMismatches": 2
+      },
+      "objects": [
+        {
+          "key": "d.txt",
+          "status": "FAIL",
+          "reasons": [
+            "extra"
+          ],
+          "detail": "present on target, absent on source",
+          "target": {
+            "size": 3,
+            "etag": "4f98f59e877ecb84ff75ef0fab45bac5",
+            "lastModified": "2026-09-12T16:14:34.189Z",
+            "storageClass": "STANDARD"
+          }
+        }
+      ],
+      "versionDiffs": [
+        {
+          "key": "d.txt",
+          "sourceVersions": 2,
+          "targetVersions": 1,
+          "sourceDeleteMarkers": 1,
+          "targetDeleteMarkers": 0,
+          "reasons": [
+            "version count 2 != 1",
+            "delete markers 1 != 0"
+          ]
+        },
+        {
+          "key": "v.txt",
+          "sourceVersions": 2,
+          "targetVersions": 1,
+          "sourceDeleteMarkers": 0,
+          "targetDeleteMarkers": 0,
+          "reasons": [
+            "version count 2 != 1"
+          ]
+        }
+      ],
+      "elapsed": "15ms"
+    }
+  ],
+  "totals": {
+    "sourceObjects": 2,
+    "targetObjects": 3,
+    "sourceBytes": 6,
+    "targetBytes": 9,
+    "matchedObjects": 2,
+    "missingObjects": 0,
+    "extraObjects": 1,
+    "mismatchedObjects": 0,
+    "errorObjects": 0,
+    "etagInconclusive": 0,
+    "deepVerified": 0,
+    "deepBytes": 0,
+    "sourceVersions": 6,
+    "targetVersions": 4,
+    "versionMismatches": 2
+  },
+  "elapsed": "22ms",
+  "limitations": [
+    "ETag equality is used as the content check: it is the MD5 of the object for single-part, unencrypted uploads and is therefore a reliable content fingerprint in that case.",
+    "Multipart ETags (suffix -N) depend on part size and encrypted objects (SSE) have non-MD5 ETags; when such ETags differ the object is marked inconclusive and, with --deep-on-inconclusive (default), both copies are downloaded and compared by SHA-256.",
+    "Version IDs are server-generated and cannot survive an S3-level migration; version histories are compared by ordered (delete-marker, size, ETag) sequence instead.",
+    "Object LastModified timestamps are not compared: the target timestamp is the migration time, not the original.",
+    "Bucket policies, lifecycle, tags and encryption configuration are compared for equality only; semantic equivalence (e.g. differently formatted but equivalent policies) beyond JSON key ordering is not detected.",
+    "ACLs, object retention/legal-hold per object, and bucket notification/replication configuration are not compared."
+  ]
+}

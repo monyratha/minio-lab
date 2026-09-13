@@ -1,0 +1,83 @@
+diff --git a/docker-compose/docker-compose.yml b/docker-compose/docker-compose.yml
+index 6a8ee38..8622001 100644
+--- a/docker-compose/docker-compose.yml
++++ b/docker-compose/docker-compose.yml
+@@ -1,3 +1,6 @@
++networks:
++  minio-migration:
++    external: true
+ volumes:
+   # Volume to preserve chorus data between restarts
+   redis-data:
+@@ -15,6 +18,8 @@ services:
+       - 6379
+     volumes:
+       - redis-data:/data
++    networks:
++      - minio-migration
+   # Chorus components
+   # Chorus worker - main component that processes data
+   worker:
+@@ -36,6 +41,8 @@ services:
+     ports:
+       - "9671:9671" # expose REST api for chorctl and web UI
+       - "9670:9670" # expose grpc management API
++    networks:
++      - minio-migration
+   # Chorus S3 proxy
+   # Can be used capture data change and backup it with worker to another S3.
+   # Can be used to migrate to another S3 by bucket. Before migration it will route all requests to old S3.
+@@ -74,6 +81,8 @@ services:
+     environment:
+       # URL to worker REST API
+       - "BACKEND_URL=http://worker:9671"
++    networks:
++      - minio-migration
+   # start fake in-memory s3 endpoints. To enable run with fake profile: "docker-compose up --profile fake up"
+   fake-s3-main:
+     profiles:
+diff --git a/docker-compose/s3-credentials.yaml b/docker-compose/s3-credentials.yaml
+index c6bbb69..ae9414a 100644
+--- a/docker-compose/s3-credentials.yaml
++++ b/docker-compose/s3-credentials.yaml
+@@ -1,29 +1,29 @@
+ storage:
+   main: main
+   storages:
+-    main: # yaml key with some handy storage name
++    main:
+       type: S3
+-      address: "http://fake-s3-main:9000"
++      address: "http://minio-a:9000"
+       credentials:
+         user1:
+-          accessKeyID: fakeKey
+-          secretAccessKey: fakeSecret
+-      provider: Other # <Ceph|Minio|Other> # S3 provider name. Required to use provider-specific APIs, like setting versionID. Use 'Other' if your storage is S3 compatible but not listed.
++          accessKeyID: minioadmin
++          secretAccessKey: minioadmin
++      provider: Minio
+       healthCheckInterval: 10s
+       httpTimeout: 1m
+-      isSecure: false #set false for http address
++      isSecure: false
+       defaultRegion: ""
+       rateLimit:
+         enable: true
+         rpm: 600
+-    follower: # yaml key with some handy storage name
++    follower:
+       type: S3
+-      address: "http://fake-s3-follower:9000"
++      address: "http://minio-b:9000"
+       credentials:
+         user1:
+-          accessKeyID: fakeKey2
+-          secretAccessKey: fakeSecret2
+-      provider: Other # <Ceph|Minio|Other> # S3 provider name. Required to use provider-specific APIs, like setting versionID. Use 'Other' if your storage is S3 compatible but not listed.
++          accessKeyID: minioadmin
++          secretAccessKey: minioadmin
++      provider: Minio
+       healthCheckInterval: 10s
+       httpTimeout: 1m
+       isSecure: false
