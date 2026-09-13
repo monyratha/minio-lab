@@ -14,8 +14,14 @@ independent S3 tool.
 ## Quick start
 
 ```bash
-make          # list every target
-make lab      # MinIO A+B, sample data, Chorus, replication, verification
+make
+```
+
+That lists every target. To run the whole lab — MinIO A+B, sample data,
+Chorus, replication and verification:
+
+```bash
+make lab
 ```
 
 Requirements: Docker, Go 1.22+, and `chorctl`
