@@ -11,12 +11,13 @@ export
 
 NETWORK     := minio-migration
 CHORUS_REF  := 8b68045
-BUCKET      ?= migration-test
+BUCKET      ?= all
 MC_IMAGE    ?= quay.io/minio/mc:latest
 CHORUS_USER ?= user1
 
-# BUCKET=all makes 'repl' and 'verify' cover every bucket on the source.
-# 'seed' still creates the lab bucket in that case.
+# 'repl' and 'verify' cover every bucket on the source by default; set
+# BUCKET to a name to handle only that one. 'seed' always creates the lab
+# bucket, since 'all' is not a bucket.
 SEED_BUCKET := $(if $(filter all,$(BUCKET)),migration-test,$(BUCKET))
 
 # Verification depth: 1 listing/ETag, 2 adds metadata and tags, 3 hashes
@@ -52,7 +53,7 @@ help:
 	@echo "  make chorus-config write the chorus storage config from .env"
 	@echo "  make chorus-reload apply .env changes to a running worker"
 	@echo "  make chorus-up     start redis, worker (:9671) and web-ui (:8080)"
-	@echo "  make repl          add replication A -> B for bucket '$(BUCKET)' (BUCKET=all: every bucket)"
+	@echo "  make repl          add replication A -> B for bucket '$(BUCKET)' ('all' = every bucket)"
 	@echo "  make chorus-down   stop the chorus stack"
 	@echo ""
 	@echo "Verification only (Path C)"

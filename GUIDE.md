@@ -183,12 +183,12 @@ chorctl repl
 chorctl dash
 ```
 
-To replicate every bucket on the source, set `BUCKET=all` in `.env` or run
-`make repl BUCKET=all`. This adds one bucket-level policy per bucket (Chorus
-does not allow a user-level policy next to bucket-level ones) and skips
-buckets that already have one, so it is safe to re-run after new buckets
-appear. `make verify BUCKET=all` then checks every bucket with
-`--all-buckets`.
+By default (`BUCKET=all`) `make repl` covers every bucket on the source. It
+adds one bucket-level policy per bucket (Chorus does not allow a user-level
+policy next to bucket-level ones) and skips buckets that already have one,
+so it is safe to re-run after new buckets appear. `make verify` then checks
+every bucket with `--all-buckets`. To handle a single bucket, set `BUCKET`
+to its name in `.env` or run `make repl BUCKET=my-bucket`.
 
 `repl add` is a one-shot copy in this lab. Chorus only learns about later
 writes through its S3 proxy or bucket notifications, and the lab starts
@@ -431,7 +431,7 @@ example `make verify BUCKET=my-bucket`.
 | `SOURCE_REGION` / `TARGET_REGION` | empty | optional S3 region |
 | `SOURCE_URL_LOCAL` | `http://localhost:9000` | source as **your machine** reaches it |
 | `TARGET_URL_LOCAL` | `http://localhost:9002` | target as **your machine** reaches it |
-| `BUCKET` | `migration-test` | bucket used by `seed`, `repl` and `verify`; `all` = every bucket on the source (`seed` then still uses `migration-test`) |
+| `BUCKET` | `all` | bucket handled by `repl` and `verify`; `all` = every bucket on the source, a name = only that bucket. `seed` always creates `migration-test` |
 | `VERIFY_LEVEL` | `2` | depth of `make verify`: 1 listing and ETags, 2 adds metadata and tags, 3 hashes all content |
 | `CHORUS_USER` | `user1` | credentials label in the Chorus config |
 | `NETWORK` | `minio-migration` | shared docker network |
