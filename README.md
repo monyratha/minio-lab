@@ -11,8 +11,12 @@ with `migration-verify`, an independent checker that only speaks S3.
                        PASS / FAIL report
 ```
 
-The lab ships two MinIO servers in Docker so you can try it on a laptop.
-To use real servers, edit one file: `.env`.
+**Two ways to read this:**
+
+- **Try it on a laptop** — keep reading. The lab ships two MinIO servers in
+  Docker and sample data, so nothing else is needed.
+- **Migrate a real server** — go to **[MIGRATION.md](MIGRATION.md)**. It is
+  a runbook for an existing source and target, and skips the lab parts.
 
 ## Requirements
 
@@ -115,29 +119,9 @@ make verify VERIFY_LEVEL=2
 
 ## Use your own servers
 
-```bash
-cp .env.example .env
-```
-
-Fill in the URLs and keys, then run steps 3 and 4. MinIO A and B are not
-needed.
-
-```dotenv
-SOURCE_URL=https://old.example.com
-SOURCE_ACCESS_KEY=...
-SOURCE_SECRET_KEY=...
-
-TARGET_URL=https://new.example.com
-TARGET_ACCESS_KEY=...
-TARGET_SECRET_KEY=...
-
-SOURCE_URL_LOCAL=https://old.example.com
-TARGET_URL_LOCAL=https://new.example.com
-```
-
-The `_LOCAL` pair is what your machine uses for `make verify`; for remote
-servers it is the same URL. `.env` is git-ignored. If you change it while
-Chorus is running: `make chorus-reload`.
+Copy `.env.example` to `.env`, fill in the source and target URLs and keys,
+and run steps 3 and 4 only. [MIGRATION.md](MIGRATION.md) walks through it,
+including checks before the copy and the switch-over afterwards.
 
 ## Stop
 
@@ -149,6 +133,7 @@ make down
 
 ## More
 
+- [MIGRATION.md](MIGRATION.md) — runbook for migrating a real server
 - [GUIDE.md](GUIDE.md) — every setting, how each part works, troubleshooting
 - [MC_CHEATSHEET.md](MC_CHEATSHEET.md) — `mc` commands for uploading, inspecting, and breaking the migration on purpose
 - [minio-migration-verification/README.md](minio-migration-verification/README.md) — the verify tool: all flags, checks, report format

@@ -178,7 +178,8 @@ own; run `check` again after `fix` to confirm. Note that `diff` takes
 
 ### Chorus with your own servers
 
-Set the URLs and keys in `.env` (see the README), then:
+The full procedure is in [MIGRATION.md](MIGRATION.md). In short: set the
+URLs and keys in `.env`, then:
 
 ```bash
 make chorus-up
