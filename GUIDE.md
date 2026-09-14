@@ -285,10 +285,10 @@ starts from zero.
 ## 8. Install on Ubuntu
 
 Everything in this repository is Docker, Go and shell scripts, so it runs
-the same on Linux. The verify tool is built and tested on `ubuntu-latest`
-in CI, and `scripts/install-ubuntu.sh` is tested on Ubuntu 22.04 and 24.04.
+the same on Linux. The commands below were run on Ubuntu 22.04 and 24.04.
+They are for amd64; on arm64 replace `amd64` with `arm64` in the URLs.
 
-Docker with the Compose plugin — follow
+**Docker** with the Compose plugin — follow
 <https://docs.docker.com/engine/install/ubuntu/>, then let your user run
 it without `sudo`:
 
@@ -296,24 +296,34 @@ it without `sudo`:
 sudo usermod -aG docker $USER && newgrp docker
 ```
 
-Everything else:
+**Go** — install the version `go.mod` asks for from go.dev. Ubuntu's own
+`golang-go` package is 1.18 on 22.04, too old for this project (any Go
+1.21 or newer would also work, since the build downloads the toolchain it
+needs):
 
 ```bash
-scripts/install-ubuntu.sh
+curl -fsSL https://go.dev/dl/go1.27.1.linux-amd64.tar.gz | sudo tar -C /usr/local -xz && echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.profile && export PATH=$PATH:/usr/local/go/bin
 ```
 
-It installs, using `sudo` for `/usr/local`:
+**chorctl** — the version the lab is tested with, a single binary from
+the Chorus GitHub release:
 
-| Tool | Version | From |
-|---|---|---|
-| Go | 1.27.1, the version `go.mod` asks for | go.dev |
-| `chorctl` | 0.7.10, the version the lab is tested with | Chorus GitHub release |
-| `mc` | latest GitHub release | `minio/mc` GitHub release (`dl.min.io` no longer serves it) |
+```bash
+curl -fsSL https://github.com/clyso/chorus/releases/download/v0.7.10/chorctl_v0.7.10_linux_amd64.tar.gz | tar -xz && sudo install chorctl /usr/local/bin/ && rm chorctl
+```
 
-The script is safe to re-run, skips what is already installed, and picks
-amd64 or arm64 by itself. Ubuntu's own `golang-go` package is not used
-because on 22.04 it is 1.18, too old for this project. Versions can be
-overridden: `GO_VERSION=… CHORCTL_VERSION=… MC_RELEASE=… scripts/install-ubuntu.sh`.
+**mc** — a single binary from the `minio/mc` GitHub release.
+`dl.min.io`, which older MinIO docs point to, now answers `410 Gone`:
+
+```bash
+curl -fsSL https://github.com/minio/mc/releases/download/RELEASE.2025-08-13T08-35-41Z/mc.linux-amd64.RELEASE.2025-08-13T08-35-41Z -o mc && sudo install mc /usr/local/bin/ && rm mc
+```
+
+Check:
+
+```bash
+docker compose version && go version && chorctl --version && mc --version
+```
 
 Two Linux-specific points:
 

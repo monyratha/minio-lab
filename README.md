@@ -14,20 +14,42 @@ with two throw-away MinIO servers.
 
 ## Requirements
 
-One Ubuntu machine (22.04 or newer) that can reach both servers, with
-[Docker](https://docs.docker.com/engine/install/ubuntu/) installed. All
-data flows through it.
+One Ubuntu machine (22.04 or newer) that can reach both servers. All
+data flows through it. Install, in this order:
+
+**Docker** with the Compose plugin — runs Chorus.
+Follow <https://docs.docker.com/engine/install/ubuntu/>, then:
+
+```bash
+sudo usermod -aG docker $USER && newgrp docker
+```
+
+**Go 1.27** — builds `migration-verify` (apt's Go on 22.04 is too old):
+
+```bash
+curl -fsSL https://go.dev/dl/go1.27.1.linux-amd64.tar.gz | sudo tar -C /usr/local -xz && echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.profile && export PATH=$PATH:/usr/local/go/bin
+```
+
+**chorctl** — controls Chorus:
+
+```bash
+curl -fsSL https://github.com/clyso/chorus/releases/download/v0.7.10/chorctl_v0.7.10_linux_amd64.tar.gz | tar -xz && sudo install chorctl /usr/local/bin/ && rm chorctl
+```
+
+**mc** — the MinIO client, for checking the servers:
+
+```bash
+curl -fsSL https://github.com/minio/mc/releases/download/RELEASE.2025-08-13T08-35-41Z/mc.linux-amd64.RELEASE.2025-08-13T08-35-41Z -o mc && sudo install mc /usr/local/bin/ && rm mc
+```
+
+**This repository:**
 
 ```bash
 git clone git@github.com:monyratha/minio-lab.git && cd minio-lab
 ```
 
-```bash
-scripts/install-ubuntu.sh
-```
-
-That installs Go, `chorctl` and `mc`, and checks Docker. On macOS use
-`brew install go minio/stable/mc clyso/tap/chorctl` instead.
+On arm64 replace `amd64` with `arm64` in the URLs. On macOS:
+`brew install go minio/stable/mc clyso/tap/chorctl`.
 
 | | |
 |---|---|
