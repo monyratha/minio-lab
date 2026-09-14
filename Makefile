@@ -1,5 +1,5 @@
 # minio-lab — one command per part of the lab.
-# Every target is safe to re-run. See GUIDE.md for the manual steps.
+# Every target is safe to re-run. GUIDE.md explains what each one does.
 #
 # All settings live in one place: .env in this directory. Start from
 # .env.example ("cp .env.example .env"). Everything below is only the
