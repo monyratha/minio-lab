@@ -7,3 +7,6 @@ chorus/
 # build output
 minio-migration-verification/bin/
 .idea/
+
+# local configuration, may contain real keys
+.env
