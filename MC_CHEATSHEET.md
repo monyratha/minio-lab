@@ -202,7 +202,7 @@ make chorus-up && make repl
 mc diff minio-a/migration-test minio-b/migration-test   # quick look
 
 make verify                                             # the real check
-open minio-migration-verification/reports/migration-report.html
+open minio-migration-verification/out/migration-report.html
 ```
 
 ## Handy flags
