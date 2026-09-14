@@ -181,8 +181,22 @@ chorctl repl buckets -u user1 -f main -t follower
 chorctl repl add -u user1 -f main -t follower -b migration-test
 chorctl repl
 chorctl dash
-chorctl diff check -u user1 -f main -t follower -b migration-test
 ```
+
+`repl add` is a one-shot copy in this lab. Chorus only learns about later
+writes through its S3 proxy or bucket notifications, and the lab starts
+neither, so objects uploaded to A after `make repl` are **not** copied to B.
+Use the built-in diff to find and re-copy them. `diff` takes
+`storage:bucket` arguments, not `-f/-t/-b`:
+
+```bash
+chorctl diff check  main:migration-test follower:migration-test --user user1
+chorctl diff report main:migration-test follower:migration-test --user user1
+chorctl diff fix --source main:migration-test follower:migration-test --user user1
+```
+
+`report` shows the result of the last `check` and does not refresh by
+itself; run `check` (or `recheck`) again after a `fix` to confirm.
 
 `repl add` returns immediately. The worker lists and copies the objects in
 the background, so `chorctl repl` right after it shows `0.0 %`. Wait for
