@@ -1,7 +1,8 @@
 # Guide
 
-The details behind the [README](README.md). Read that first; come here when
-you want to know what a command does, change a setting, or fix an error.
+The details behind the [README](README.md) (real servers) and
+[LAB.md](LAB.md) (two MinIO servers on a laptop). Come here when you want
+to know what a command does, change a setting, or fix an error.
 
 ## 1. How the parts fit together
 
@@ -178,7 +179,7 @@ own; run `check` again after `fix` to confirm. Note that `diff` takes
 
 ### Chorus with your own servers
 
-The full procedure is in [MIGRATION.md](MIGRATION.md). In short: set the
+The full procedure is in the [README](README.md). In short: set the
 URLs and keys in `.env`, then:
 
 ```bash
