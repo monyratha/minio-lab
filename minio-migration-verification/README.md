@@ -22,7 +22,8 @@ Related documents in this directory:
 | [CHECKLIST.md](CHECKLIST.md) | The migration verification checklist the tool implements |
 | [CHORUS_FINDINGS.md](CHORUS_FINDINGS.md) | What Chorus does and does not provide for progress / status / diff / reporting |
 | [TEST_RESULTS.md](TEST_RESULTS.md) | Exact commands and results of the Chorus A→B replication test and the verification runs |
-| [reports/](reports/) | Generated reports for the current lab data (`migration-report.*`) and self-test evidence |
+| [reports/](reports/) | Recorded reports for the lab data (`migration-report*.*`) and self-test evidence, as cited in TEST_RESULTS.md |
+| `out/` | Where `run-verify.sh` / `make verify` write their reports; git-ignored, overwritten on every run |
 | [AGENT_HANDOFF.md](AGENT_HANDOFF.md) | Original task hand-off / environment description |
 
 ---
@@ -105,6 +106,7 @@ export TARGET_ACCESS_KEY=minioadmin TARGET_SECRET_KEY=minioadmin
 ```
 
 There is a convenience wrapper with the same defaults: `./run-verify.sh [extra flags]`.
+It writes to `out/` instead (git-ignored), or to `REPORT_DIR` when set.
 
 ### All flags
 
@@ -344,5 +346,6 @@ internal/verify/verify_test.go    unit tests for the pure comparison logic
 Dockerfile                        container build (multi-stage, static binary)
 internal/report/model.go          JSON report model + status roll-up
 internal/report/render.go         text / JSON / HTML renderers
-reports/                          generated reports for the lab data + self-test evidence
+reports/                          recorded reports for the lab data + self-test evidence
+out/                              reports from run-verify.sh (git-ignored)
 ```

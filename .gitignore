@@ -6,6 +6,8 @@ minio-b/data/
 chorus/
 # build output
 minio-migration-verification/bin/
+# reports written by run-verify.sh / make verify; reports/ is the committed evidence
+minio-migration-verification/out/
 .idea/
 
 # local configuration, may contain real keys
