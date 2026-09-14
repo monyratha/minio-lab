@@ -14,15 +14,24 @@ with two throw-away MinIO servers.
 
 ## Requirements
 
-- One machine that can reach both servers, with Docker, Go 1.22+,
-  `chorctl` (`brew install clyso/tap/chorctl`) and this repository.
-  All data flows through it.
-- A **source key** that can list and read, and a **target key** that can
-  list, read, write and create buckets.
-- **Empty target buckets.** Objects on the target that are not on the
-  source count as failures.
-- **A moment when writes to the source stop.** The copy is one-shot;
-  later writes are caught up by hand in step 5.
+One machine that can reach both servers. All data flows through it.
+
+```bash
+brew install go minio/stable/mc clyso/tap/chorctl
+```
+
+```bash
+git clone git@github.com:monyratha/minio-lab.git && cd minio-lab
+```
+
+Plus [Docker](https://docs.docker.com/get-docker/), which runs Chorus.
+
+| | |
+|---|---|
+| Source key | can list and read |
+| Target key | can list, read, write and create buckets |
+| Target buckets | empty — objects not on the source count as failures |
+| Writes to the source | must stop at some point; the copy is one-shot (step 5) |
 
 ## 1. Configure
 
