@@ -20,19 +20,34 @@ flows through it**: source → this machine → target for the copy, and both
 servers → this machine again for the verification. Pick a machine with
 good bandwidth to both servers.
 
-## Before you start
+## Requirements
 
-- On that machine: Docker, Go 1.22+, `chorctl` (`brew install clyso/tap/chorctl`),
-  `mc` (`brew install minio/stable/mc`), and this repository.
-- **Source credentials**: list and read on every bucket to migrate.
-- **Target credentials**: list, read, write, create bucket. `make verify`
-  also writes and deletes one small probe object per bucket on the target
-  to prove an application can use it.
-- The copy is **one-shot**. Objects written to the source after the copy
-  starts are not picked up automatically (see step 6). Plan a moment when
-  writes to the source stop.
-- The target buckets should be empty or not exist. Anything already on the
-  target that is not on the source is reported as an *extra object* FAIL.
+**On the machine that runs the migration** (a laptop or a jump host):
+
+| Tool | Why | Install |
+|---|---|---|
+| Docker | runs Chorus | https://docs.docker.com/get-docker/ |
+| Go 1.22+ | builds `migration-verify` | `brew install go` |
+| `chorctl` | controls Chorus | `brew install clyso/tap/chorctl` |
+| `mc` | checks the servers | `brew install minio/stable/mc` |
+| this repository | the `make` targets | `git clone git@github.com:monyratha/minio-lab.git` |
+
+The machine must reach both servers over the network.
+
+**Two access keys:**
+
+| | Needs to | Notes |
+|---|---|---|
+| Source key | list buckets, list and read objects | read-only is enough |
+| Target key | list, read, write, create buckets | `make verify` also writes and deletes one small probe object per bucket, to prove an application can use the target |
+
+**Two things to know before the copy:**
+
+- **The target should be empty.** Anything on the target that is not on
+  the source is reported as an *extra object* FAIL.
+- **The copy is one-shot.** Objects written to the source after the copy
+  starts are not picked up by themselves. Plan a moment when writes to
+  the source stop; step 6 covers the catch-up.
 
 ## 1. Configure
 
