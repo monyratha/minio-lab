@@ -325,7 +325,11 @@ Check:
 docker compose version && go version && chorctl --version && mc --version
 ```
 
-Two Linux-specific points:
+The lab's own MinIO A and B run on Linux too: they are plain Compose
+files with a multi-arch image, so `make lab` and [LAB.md](LAB.md) apply
+unchanged.
+
+Three Linux-specific points:
 
 - `host.docker.internal` does not exist on Linux Docker by default. If a
   MinIO server runs on the same host **outside** Docker, put the host's
@@ -333,3 +337,7 @@ Two Linux-specific points:
   containers on the shared network, so they need nothing.
 - Use `docker compose` (the plugin), not the old `docker-compose` binary;
   the Makefile calls the former.
+- The MinIO containers run as root, so on Linux the bind-mounted
+  `minio-a/data` and `minio-b/data` folders end up root-owned (Docker
+  Desktop on a Mac maps them to your user). `make clean` then needs
+  `sudo rm -rf minio-a/data minio-b/data` first.
