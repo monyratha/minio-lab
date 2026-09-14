@@ -281,3 +281,63 @@ clone and the built binary. The redis volume matters: Chorus keeps its
 replication policies there, and with stale policies a fresh lab thinks the
 copy already happened and copies nothing. `make clean` then `make lab`
 starts from zero.
+
+## 8. Install on Ubuntu
+
+Everything in this repository is Docker, Go and shell scripts, so it runs
+the same on Linux. The commands below were run on Ubuntu 22.04 and 24.04.
+They are for amd64; on arm64 replace `amd64` with `arm64` in the URLs.
+
+**Docker** with the Compose plugin — follow
+<https://docs.docker.com/engine/install/ubuntu/>, then let your user run
+it without `sudo`:
+
+```bash
+sudo usermod -aG docker $USER && newgrp docker
+```
+
+**Go** — install the version `go.mod` asks for from go.dev. Ubuntu's own
+`golang-go` package is 1.18 on 22.04, too old for this project (any Go
+1.21 or newer would also work, since the build downloads the toolchain it
+needs):
+
+```bash
+curl -fsSL https://go.dev/dl/go1.27.1.linux-amd64.tar.gz | sudo tar -C /usr/local -xz && echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.profile && export PATH=$PATH:/usr/local/go/bin
+```
+
+**chorctl** — the version the lab is tested with, a single binary from
+the Chorus GitHub release:
+
+```bash
+curl -fsSL https://github.com/clyso/chorus/releases/download/v0.7.10/chorctl_v0.7.10_linux_amd64.tar.gz | tar -xz && sudo install chorctl /usr/local/bin/ && rm chorctl
+```
+
+**mc** — a single binary from the `minio/mc` GitHub release.
+`dl.min.io`, which older MinIO docs point to, now answers `410 Gone`:
+
+```bash
+curl -fsSL https://github.com/minio/mc/releases/download/RELEASE.2025-08-13T08-35-41Z/mc.linux-amd64.RELEASE.2025-08-13T08-35-41Z -o mc && sudo install mc /usr/local/bin/ && rm mc
+```
+
+Check:
+
+```bash
+docker compose version && go version && chorctl --version && mc --version
+```
+
+The lab's own MinIO A and B run on Linux too: they are plain Compose
+files with a multi-arch image, so `make lab` and [LAB.md](LAB.md) apply
+unchanged.
+
+Three Linux-specific points:
+
+- `host.docker.internal` does not exist on Linux Docker by default. If a
+  MinIO server runs on the same host **outside** Docker, put the host's
+  LAN IP in `SOURCE_URL` / `TARGET_URL`. The lab's own MinIO A and B are
+  containers on the shared network, so they need nothing.
+- Use `docker compose` (the plugin), not the old `docker-compose` binary;
+  the Makefile calls the former.
+- The MinIO containers run as root, so on Linux the bind-mounted
+  `minio-a/data` and `minio-b/data` folders end up root-owned (Docker
+  Desktop on a Mac maps them to your user). `make clean` then needs
+  `sudo rm -rf minio-a/data minio-b/data` first.

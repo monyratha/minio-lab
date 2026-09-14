@@ -15,9 +15,12 @@ nothing else set up. For a real source and target, use the
 ## Requirements
 
 - Docker
-- Go 1.22 or newer (builds `migration-verify`)
+- Go 1.21 or newer (builds `migration-verify`; the build fetches the exact
+  toolchain it needs)
 - `chorctl` — `brew install clyso/tap/chorctl`
 - `mc`, optional, to upload your own data — `brew install minio/stable/mc`
+
+Ubuntu install commands: [GUIDE.md](GUIDE.md#8-install-on-ubuntu).
 
 ## Try it in one command
 
