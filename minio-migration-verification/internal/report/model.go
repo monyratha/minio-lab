@@ -2,7 +2,12 @@
 // the JSON / HTML / text renderers for it.
 package report
 
-import "time"
+import (
+	"fmt"
+	"sort"
+	"strings"
+	"time"
+)
 
 // Status is the outcome of a single check, a bucket, or the whole run.
 type Status string
@@ -140,6 +145,46 @@ type Report struct {
 	Totals      Summary        `json:"totals"`
 	Elapsed     string         `json:"elapsed"`
 	Limitations []string       `json:"limitations,omitempty"`
+}
+
+// ProblemBuckets returns how many buckets did not pass.
+func (r *Report) ProblemBuckets() int {
+	n := 0
+	for _, b := range r.Buckets {
+		if b.Status.Worse(Pass) && b.Status != NA && b.Status != Skipped {
+			n++
+		}
+	}
+	return n
+}
+
+// BucketsByStatus returns the buckets with problems first (worst status
+// first), then the passing ones, each group in report order. The report's
+// own slice is left untouched so JSON keeps the verification order.
+func (r *Report) BucketsByStatus() []BucketReport {
+	out := make([]BucketReport, len(r.Buckets))
+	copy(out, r.Buckets)
+	sort.SliceStable(out, func(i, j int) bool { return out[i].Status.Worse(out[j].Status) })
+	return out
+}
+
+// Headline is the one-line reason for a bucket's status: the first check
+// that is not PASS, or the object counts when the checks all passed.
+func (b *BucketReport) Headline() string {
+	for _, c := range b.Checks {
+		if c.Status == Fail || c.Status == Error || c.Status == Warn {
+			if c.Detail != "" {
+				return c.Name + ": " + c.Detail
+			}
+			return c.Name + ": " + string(c.Status)
+		}
+	}
+	s := b.Summary
+	parts := []string{fmt.Sprintf("%d objects", s.MatchedObjects)}
+	if s.DeepVerified > 0 {
+		parts = append(parts, fmt.Sprintf("%d hashed", s.DeepVerified))
+	}
+	return strings.Join(parts, ", ")
 }
 
 // Recompute derives bucket and overall status from the individual checks.

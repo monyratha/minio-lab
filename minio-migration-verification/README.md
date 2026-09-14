@@ -286,10 +286,19 @@ JSON structure (abridged):
 
 Field notes:
 
-* `objects[]` lists every **missing**, **extra**, **mismatched**, **error**
-  and **deep-verified** object with both sides' observed attributes. Fully
-  matching objects are counted in `summary.matchedObjects` and only listed
-  with `--list-matched` (keeps reports small on large buckets).
+* `objects[]` lists every **missing**, **extra**, **mismatched** and
+  **error** object with both sides' observed attributes, problems first.
+  Fully matching objects are counted in `summary.matchedObjects` and only
+  listed with `--list-matched` (keeps reports small on large buckets). The
+  exception is an object that was deep-checked *on demand* at level 1 or 2
+  because its ETag was inconclusive: it is listed as PASS with reason
+  `deep-verified` so the report explains the download. At level 3 every
+  object is hashed and `summary.deepVerified` says so, so they are not
+  listed individually.
+* With several buckets the HTML report starts with a **Buckets** table,
+  problem buckets first, each linking to its section; sections of passing
+  buckets are collapsed. The text output prints one line per passing
+  bucket and the full check list only for buckets with a problem.
 * `objects[].reasons` values: `missing`, `extra`, `size`, `etag`,
   `etag-inconclusive`, `contentType`, `metadata`, `tags`, `content`,
   `deep-verified`.

@@ -31,7 +31,13 @@ func WriteText(r *Report, w io.Writer) {
 	for _, c := range r.Checks {
 		fmt.Fprintf(w, "%-22s %-7s %s\n", c.Name, c.Status, checkDetail(c))
 	}
-	for _, b := range r.Buckets {
+	// passing buckets get one line each; the full check list is only worth
+	// reading for the ones with a problem
+	for _, b := range r.BucketsByStatus() {
+		if b.Status == Pass {
+			fmt.Fprintf(w, "\nBucket: %s -> %s   PASS   %s\n", b.SourceBucket, b.TargetBucket, b.Headline())
+			continue
+		}
 		fmt.Fprintf(w, "\nBucket: %s -> %s", b.SourceBucket, b.TargetBucket)
 		if b.Prefix != "" {
 			fmt.Fprintf(w, " (prefix %q)", b.Prefix)
@@ -67,7 +73,15 @@ func WriteText(r *Report, w io.Writer) {
 		}
 		fmt.Fprintf(w, "\nBucket Status      %s\n", b.Status)
 	}
-	fmt.Fprintf(w, "\n%s\nOverall            %s   (%s)\n%s\n", line, r.Status, r.Elapsed, line)
+	fmt.Fprintf(w, "\n%s\n", line)
+	if n := len(r.Buckets); n > 1 {
+		if p := r.ProblemBuckets(); p > 0 {
+			fmt.Fprintf(w, "Buckets            %d verified, %d with problems\n", n, p)
+		} else {
+			fmt.Fprintf(w, "Buckets            %d verified, all passed\n", n)
+		}
+	}
+	fmt.Fprintf(w, "Overall            %s   (%s)\n%s\n", r.Status, r.Elapsed, line)
 	if len(r.Limitations) > 0 {
 		fmt.Fprintf(w, "\nNotes / limitations:\n")
 		for _, l := range r.Limitations {
@@ -138,6 +152,7 @@ table{border-collapse:collapse;width:100%;margin:8px 0}th,td{text-align:left;pad
 code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;background:var(--code);border-radius:4px}code{padding:1px 4px}pre{padding:8px;overflow:auto;max-height:280px;margin:0}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:10px 0}.tile{border:1px solid var(--line);border-radius:8px;padding:10px}.tile .v{font-size:22px;font-weight:600}.tile .k{font-size:12px;color:var(--muted)}
 details{margin:6px 0}summary{cursor:pointer}ul.lim{margin:4px 0 0 18px}
+.bad{color:var(--fail);font-weight:600}a{color:inherit}details.bucket>summary{font-size:12px}details.bucket[open]>summary{margin-bottom:4px}
 </style></head><body>
 <h1>MinIO Migration Verification</h1>
 <div class="muted">{{.Tool}} {{.Version}} · generated {{.GeneratedAt.Format "2006-01-02 15:04:05 MST"}} · elapsed {{.Elapsed}}</div>
@@ -152,15 +167,24 @@ details{margin:6px 0}summary{cursor:pointer}ul.lim{margin:4px 0 0 18px}
 <div class="tile"><div class="v">{{.Totals.ExtraObjects}}</div><div class="k">extra on target</div></div>
 <div class="tile"><div class="v">{{.Totals.MismatchedObjects}}</div><div class="k">mismatched</div></div>
 {{if .Totals.DeepVerified}}<div class="tile"><div class="v">{{.Totals.DeepVerified}}</div><div class="k">deep verified ({{bytes .Totals.DeepBytes}})</div></div>{{end}}
+{{if gt (len .Buckets) 1}}<div class="tile"><div class="v">{{len .Buckets}}</div><div class="k">buckets{{if .ProblemBuckets}}, <b class="bad">{{.ProblemBuckets}} with problems</b>{{else}}, all passed{{end}}</div></div>{{end}}
 </div>
+{{if gt (len .Buckets) 1}}
+<h2>Buckets</h2>
+<table><tr><th>Bucket</th><th>Status</th><th>Source</th><th>Target</th><th>Missing</th><th>Extra</th><th>Mismatched</th><th>Why</th></tr>
+{{range .BucketsByStatus}}<tr><td><a href="#b-{{.SourceBucket}}"><code>{{.SourceBucket}}</code></a>{{if ne .SourceBucket .TargetBucket}} → <code>{{.TargetBucket}}</code>{{end}}</td><td><span class="badge s-{{lower .Status}}">{{.Status}}</span></td>
+<td>{{.Summary.SourceObjects}} <span class="muted">({{bytes .Summary.SourceBytes}})</span></td><td>{{.Summary.TargetObjects}} <span class="muted">({{bytes .Summary.TargetBytes}})</span></td>
+<td{{if .Summary.MissingObjects}} class="bad"{{end}}>{{.Summary.MissingObjects}}</td><td{{if .Summary.ExtraObjects}} class="bad"{{end}}>{{.Summary.ExtraObjects}}</td><td{{if .Summary.MismatchedObjects}} class="bad"{{end}}>{{.Summary.MismatchedObjects}}</td><td>{{.Headline}}</td></tr>{{end}}
+</table>{{end}}
 
 <h2>Global checks</h2>
 <table><tr><th>Check</th><th>Status</th><th>Detail</th></tr>
 {{range .Checks}}<tr><td>{{.Name}}</td><td><span class="badge s-{{lower .Status}}">{{.Status}}</span></td><td>{{.Detail}}</td></tr>{{end}}
 </table>
 
-{{range .Buckets}}
-<h2>Bucket <code>{{.SourceBucket}}</code> → <code>{{.TargetBucket}}</code>{{if .Prefix}} <span class="muted">prefix <code>{{.Prefix}}</code></span>{{end}} <span class="badge s-{{lower .Status}}">{{.Status}}</span></h2>
+{{range .BucketsByStatus}}
+<h2 id="b-{{.SourceBucket}}">Bucket <code>{{.SourceBucket}}</code> → <code>{{.TargetBucket}}</code>{{if .Prefix}} <span class="muted">prefix <code>{{.Prefix}}</code></span>{{end}} <span class="badge s-{{lower .Status}}">{{.Status}}</span> <span class="muted">{{.Headline}}</span></h2>
+<details class="bucket"{{if ne .Status "PASS"}} open{{end}}><summary class="muted">checks and object details</summary>
 <table><tr><th>Check</th><th>Status</th><th>Source</th><th>Target</th><th>Detail</th></tr>
 {{range .Checks}}<tr><td>{{.Name}}</td><td><span class="badge s-{{lower .Status}}">{{.Status}}</span></td><td>{{.Source}}</td><td>{{.Target}}</td><td>{{.Detail}}</td></tr>{{end}}
 </table>
@@ -187,6 +211,7 @@ details{margin:6px 0}summary{cursor:pointer}ul.lim{margin:4px 0 0 18px}
 <table><tr><th>Key</th><th>Src versions</th><th>Tgt versions</th><th>Src delete markers</th><th>Tgt delete markers</th><th>Reasons</th></tr>
 {{range .Versions}}<tr><td><code>{{.Key}}</code></td><td>{{.SourceVersion}}</td><td>{{.TargetVersion}}</td><td>{{.SourceDeleteM}}</td><td>{{.TargetDeleteM}}</td><td>{{join .Reasons ", "}}</td></tr>{{end}}
 </table>{{end}}
+</details>
 {{end}}
 
 {{if .Limitations}}<h2>Notes and limitations</h2><ul class="lim">{{range .Limitations}}<li>{{.}}</li>{{end}}</ul>{{end}}
