@@ -282,6 +282,27 @@ For the lab defaults (A → B, bucket `migration-test`) use the wrapper:
 ./run-verify.sh --smoke-test
 ```
 
+### Verification levels
+
+`--level` (or `VERIFY_LEVEL` for `make verify`) sets how deep each object is
+checked. Each level includes the ones below it.
+
+| Level | Checks | Cost | Use it for |
+|---|---|---|---|
+| 1 | bucket settings, object names, count, size, ETag | one listing per side | huge buckets, quick first pass |
+| 2 (default) | + content type, user metadata, tags | one HEAD and one GetObjectTagging per object per side | normal verification |
+| 3 | + SHA-256 of the content of every object | downloads all data from both sides | proof of byte-identical content |
+
+Level 2 is enough in most cases: an ETag is the MD5 of the content for
+single-part unencrypted uploads, so equal ETags already prove equal content.
+Objects whose ETag cannot be trusted (multipart `…-N`, SSE) and differ are
+SHA-256 checked on demand at any level, so a doubtful object never passes
+silently. Level 3 forces that download for everything.
+
+```bash
+make verify VERIFY_LEVEL=3
+```
+
 Exit codes make it usable as a gate in CI or a runbook:
 
 | Code | Meaning |
@@ -390,6 +411,7 @@ example `make verify BUCKET=my-bucket`.
 | `SOURCE_URL_LOCAL` | `http://localhost:9000` | source as **your machine** reaches it |
 | `TARGET_URL_LOCAL` | `http://localhost:9002` | target as **your machine** reaches it |
 | `BUCKET` | `migration-test` | bucket used by `seed`, `repl` and `verify` |
+| `VERIFY_LEVEL` | `2` | depth of `make verify`: 1 listing and ETags, 2 adds metadata and tags, 3 hashes all content |
 | `CHORUS_USER` | `user1` | credentials label in the Chorus config |
 | `NETWORK` | `minio-migration` | shared docker network |
 | `CHORUS_REF` | `8b68045` | pinned upstream chorus commit |

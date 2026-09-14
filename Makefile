@@ -15,6 +15,10 @@ BUCKET      ?= migration-test
 MC_IMAGE    ?= quay.io/minio/mc:latest
 CHORUS_USER ?= user1
 
+# Verification depth: 1 listing/ETag, 2 adds metadata and tags, 3 hashes
+# every object on both sides (downloads everything).
+VERIFY_LEVEL ?= 2
+
 # What the Chorus worker connects to (container view).
 SOURCE_URL        ?= http://minio-a:9000
 TARGET_URL        ?= http://minio-b:9000
@@ -48,7 +52,7 @@ help:
 	@echo "  make chorus-down   stop the chorus stack"
 	@echo ""
 	@echo "Verification only (Path C)"
-	@echo "  make verify        build migration-verify and check A against B"
+	@echo "  make verify        build migration-verify and check A against B (VERIFY_LEVEL=$(VERIFY_LEVEL))"
 	@echo ""
 	@echo "Everything"
 	@echo "  make lab           run the whole lab end to end"
@@ -124,7 +128,7 @@ repl: chorus-wait
 verify:
 	cd minio-migration-verification && $(MAKE) build && \
 	  SOURCE_ENDPOINT=$(SOURCE_URL_LOCAL) TARGET_ENDPOINT=$(TARGET_URL_LOCAL) \
-	  BUCKET=$(BUCKET) ./run-verify.sh --smoke-test
+	  BUCKET=$(BUCKET) ./run-verify.sh --smoke-test --level $(VERIFY_LEVEL)
 
 config:
 	@echo "chorus worker sees   main     $(SOURCE_URL)"
@@ -133,6 +137,7 @@ config:
 	@echo "                     target   $(TARGET_URL_LOCAL)"
 	@echo "bucket               $(BUCKET)"
 	@echo "chorus user          $(CHORUS_USER)"
+	@echo "verify level         $(VERIFY_LEVEL)"
 	@if [ -f .env ]; then echo "settings from        .env"; \
 	else echo "settings from        built-in lab defaults (no .env file)"; fi
 
