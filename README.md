@@ -57,6 +57,7 @@ Stop everything with `make down`. Delete the data too with `make clean`.
 ## Documents
 
 * **[GUIDE.md](GUIDE.md)** — step-by-step setup, ports, credentials, common errors.
+* **[MC_CHEATSHEET.md](MC_CHEATSHEET.md)** — the `mc` commands for uploading test data, inspecting A and B, and breaking the migration on purpose.
 * [minio-migration-verification/README.md](minio-migration-verification/README.md) — the `migration-verify` tool: flags, checks, report format.
 * [minio-migration-verification/CHECKLIST.md](minio-migration-verification/CHECKLIST.md) — the verification checklist.
 * [minio-migration-verification/CHORUS_FINDINGS.md](minio-migration-verification/CHORUS_FINDINGS.md) — what Chorus reports, and what it does not.
