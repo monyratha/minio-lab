@@ -27,6 +27,20 @@ make lab
 Requirements: Docker, Go 1.22+, and `chorctl`
 (`brew install clyso/tap/chorctl`) for the replication step.
 
+## Configuration
+
+The lab runs with no configuration at all. To point it at your own S3
+servers instead of MinIO A and B, copy the example file and edit it:
+
+```bash
+cp .env.example .env
+make config
+```
+
+`.env` is the only place to change. It is git-ignored, and nothing inside
+the `chorus/` clone is ever edited by hand. See
+[GUIDE.md](GUIDE.md#2-all-settings-live-in-env).
+
 ## The three parts are independent
 
 You do not have to run everything. Pick what you need:

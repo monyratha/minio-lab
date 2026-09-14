@@ -26,7 +26,43 @@ Every command below is safe to re-run. Each path also has a `make` shortcut.
 > **zsh warning:** do not paste `#` comments into an interactive `zsh`.
 > It fails with `parse error near '#'`. All code blocks here are comment-free.
 
-## 2. Ports and credentials
+## 2. All settings live in .env
+
+You never edit anything inside the `chorus/` clone. Copy the example file
+once and change only that:
+
+```bash
+cp .env.example .env
+```
+
+Without a `.env` file the built-in lab defaults are used, so the lab works
+out of the box. Check what is in use at any time:
+
+```bash
+make config
+```
+
+The file holds two kinds of URL, and mixing them up is the usual mistake:
+
+| Setting | Who uses it | Lab value |
+|---|---|---|
+| `SOURCE_URL` / `TARGET_URL` | the Chorus worker, from inside a container | `http://minio-a:9000` / `http://minio-b:9000` |
+| `SOURCE_URL_LOCAL` / `TARGET_URL_LOCAL` | `make seed` and `make verify`, from your machine | `http://localhost:9000` / `http://localhost:9002` |
+
+With your own servers both pairs are usually the same URL.
+
+`make chorus-config` turns `.env` into
+`chorus/docker-compose/s3-credentials.yaml`. `make chorus-up` does it for
+you. After changing `.env` on a running lab:
+
+```bash
+make chorus-reload
+```
+
+That regenerates the file and recreates the worker, which reads the config
+only at startup.
+
+## 3. Ports and credentials
 
 | Service | URL | Login |
 |---|---|---|
@@ -119,16 +155,20 @@ Manual version:
 git -C chorus checkout 8b68045
 git -C chorus apply --reverse --check ../chorus-lab-config.patch 2>/dev/null \
   || git -C chorus apply ../chorus-lab-config.patch
+scripts/render-s3-credentials.sh
 (cd chorus/docker-compose && docker compose up -d)
 until curl -sf http://localhost:9671/storage >/dev/null; do sleep 2; done
 ```
 
-`chorus/` is a clone of upstream and is git-ignored. All lab changes live in
-`chorus-lab-config.patch`. The patch does two things:
+`chorus/` is a clone of upstream and is git-ignored. Two things change it:
 
-1. Joins redis, worker and web-ui to the external `minio-migration` network.
-2. Replaces the fake demo storages with `minio-a` (`main`) and `minio-b`
-   (`follower`) in `s3-credentials.yaml`.
+1. `chorus-lab-config.patch` joins redis, worker and web-ui to the external
+   `minio-migration` network.
+2. `scripts/render-s3-credentials.sh` writes `s3-credentials.yaml` from your
+   `.env`, replacing the fake demo storages.
+
+Nothing inside `chorus/` is edited by hand, so a fresh clone always ends up
+with your settings.
 
 The S3 proxy service is **not** started. It is only needed to capture live
 writes. An initial copy does not need it.
@@ -160,10 +200,51 @@ Same data over plain HTTP, no CLI:
 curl -s -X POST http://localhost:9671/replication -d '{}' | jq
 ```
 
-**To use your own S3 instead of MinIO A/B:** edit
-`chorus/docker-compose/s3-credentials.yaml` after applying the patch. Change
-the `address` and `credentials` of `main` and `follower`. Then
-`docker compose up -d --force-recreate worker`.
+### Point Chorus at your own MinIO servers
+
+MinIO A and B are only examples. Chorus never needs them. Put your servers
+in `.env`:
+
+```bash
+cp .env.example .env
+```
+
+```dotenv
+SOURCE_URL=https://s3-old.example.com
+SOURCE_ACCESS_KEY=YOUR_SOURCE_KEY
+SOURCE_SECRET_KEY=YOUR_SOURCE_SECRET
+
+TARGET_URL=https://s3-new.example.com
+TARGET_ACCESS_KEY=YOUR_TARGET_KEY
+TARGET_SECRET_KEY=YOUR_TARGET_SECRET
+
+SOURCE_URL_LOCAL=https://s3-old.example.com
+TARGET_URL_LOCAL=https://s3-new.example.com
+
+BUCKET=your-bucket
+```
+
+Then start Chorus alone and copy:
+
+```bash
+make chorus-up
+chorctl storage
+make repl
+make verify
+```
+
+`chorctl storage` must list both storages. That proves the worker reached
+them. If you change `.env` later, run `make chorus-reload`.
+
+Four things to keep right:
+
+* **Never use `localhost` in `SOURCE_URL` or `TARGET_URL`.** Inside the
+  worker container it means the container. Use a hostname or IP it can
+  reach; on a Mac, a server on your laptop is `host.docker.internal`.
+* **`https://` is enough to turn TLS on.** There is no separate flag.
+* **The source key needs read, the target key needs write.**
+* **`CHORUS_USER` is a label, not an S3 user.** It only has to match the
+  `-u` value that `chorctl` uses, which `make repl` handles for you.
 
 What Chorus does and does not report is written down in
 [`minio-migration-verification/CHORUS_FINDINGS.md`](minio-migration-verification/CHORUS_FINDINGS.md).
@@ -236,7 +317,7 @@ The recorded run is in
 
 ---
 
-## 3. Check the state
+## 4. Check the state
 
 ```bash
 make status
@@ -245,7 +326,7 @@ git -C chorus rev-parse --short HEAD
 curl -sf http://localhost:9671/storage && echo " worker OK"
 ```
 
-## 4. Common errors
+## 5. Common errors
 
 | Message | Meaning | Do this |
 |---|---|---|
@@ -261,7 +342,7 @@ curl -sf http://localhost:9671/storage && echo " worker OK"
 | `Bucket 'migration-test' does not exist` | Nothing was seeded on MinIO A. | `make seed` |
 | Port already in use | Another service holds 9000/9001/9002/9003. | Change the left side of `ports:` in the compose file. |
 
-## 5. Stop and clean up
+## 6. Stop and clean up
 
 Stop the containers and remove the network:
 
@@ -293,17 +374,30 @@ make clean
 make lab
 ```
 
-## 6. Makefile variables
+## 7. Settings reference
 
-Override them on the command line, for example `make verify BUCKET=my-bucket`.
+Set these in `.env`. They can also be overridden for one command, for
+example `make verify BUCKET=my-bucket`.
 
 | Variable | Default | Meaning |
 |---|---|---|
+| `SOURCE_URL` | `http://minio-a:9000` | source as the Chorus worker reaches it |
+| `TARGET_URL` | `http://minio-b:9000` | target as the Chorus worker reaches it |
+| `SOURCE_ACCESS_KEY` / `SOURCE_SECRET_KEY` | `minioadmin` | source credentials |
+| `TARGET_ACCESS_KEY` / `TARGET_SECRET_KEY` | `minioadmin` | target credentials |
+| `SOURCE_PROVIDER` / `TARGET_PROVIDER` | `Minio` | `Minio`, `Ceph` or `Other` |
+| `SOURCE_REGION` / `TARGET_REGION` | empty | optional S3 region |
+| `SOURCE_URL_LOCAL` | `http://localhost:9000` | source as **your machine** reaches it |
+| `TARGET_URL_LOCAL` | `http://localhost:9002` | target as **your machine** reaches it |
 | `BUCKET` | `migration-test` | bucket used by `seed`, `repl` and `verify` |
-| `CHORUS_USER` | `user1` | Chorus user in `s3-credentials.yaml` |
+| `CHORUS_USER` | `user1` | credentials label in the Chorus config |
 | `NETWORK` | `minio-migration` | shared docker network |
 | `CHORUS_REF` | `8b68045` | pinned upstream chorus commit |
 | `MC_IMAGE` | `quay.io/minio/mc:latest` | mc image, used only when you have no local `mc` |
+
+`isSecure` is not a setting. An `https://` URL turns TLS on by itself.
+
+`.env` is git-ignored, so real keys stay out of the repository.
 
 The Chorus user is **not** your login name. It must match a key under
 `credentials:` in `chorus/docker-compose/s3-credentials.yaml`. The variable is
