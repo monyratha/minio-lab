@@ -4,6 +4,8 @@
 # overridden through the environment. Any extra arguments are passed on,
 # e.g.:  ./run-verify.sh --level 3 --smoke-test
 #
+# BUCKET=all verifies every bucket on the source (--all-buckets).
+#
 # Reports go to out/ (git-ignored, overwritten on every run), or to
 # REPORT_DIR. reports/ holds the committed evidence for TEST_RESULTS.md
 # and is never written by this script.
@@ -20,12 +22,18 @@ TARGET="${TARGET_ENDPOINT:-http://localhost:9002}"
 BUCKET="${BUCKET:-migration-test}"
 REPORT_DIR="${REPORT_DIR:-out}"
 
+if [ "$BUCKET" = all ]; then
+  BUCKET_ARGS=(--all-buckets)
+else
+  BUCKET_ARGS=(--bucket "$BUCKET")
+fi
+
 [ -x bin/migration-verify ] || go build -o bin/migration-verify ./cmd/migration-verify
 mkdir -p "$REPORT_DIR"
 
 exec ./bin/migration-verify \
   --source "$SOURCE" --target "$TARGET" \
   --source-name "${SOURCE_NAME:-MinIO A}" --target-name "${TARGET_NAME:-MinIO B}" \
-  --bucket "$BUCKET" \
+  "${BUCKET_ARGS[@]}" \
   --json "$REPORT_DIR/migration-report.json" --html "$REPORT_DIR/migration-report.html" \
   "$@"

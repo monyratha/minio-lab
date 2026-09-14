@@ -15,6 +15,10 @@ BUCKET      ?= migration-test
 MC_IMAGE    ?= quay.io/minio/mc:latest
 CHORUS_USER ?= user1
 
+# BUCKET=all makes 'repl' and 'verify' cover every bucket on the source.
+# 'seed' still creates the lab bucket in that case.
+SEED_BUCKET := $(if $(filter all,$(BUCKET)),migration-test,$(BUCKET))
+
 # Verification depth: 1 listing/ETag, 2 adds metadata and tags, 3 hashes
 # every object on both sides (downloads everything).
 VERIFY_LEVEL ?= 2
@@ -40,7 +44,7 @@ TARGET_URL_LOCAL  ?= http://localhost:9002
 help:
 	@echo "Storage only (Path A)"
 	@echo "  make minio-up      start MinIO A (:9000) and B (:9002) on the shared network"
-	@echo "  make seed          create bucket '$(BUCKET)' with sample objects if it is missing"
+	@echo "  make seed          create bucket '$(SEED_BUCKET)' with sample objects if it is missing"
 	@echo "  make minio-down    stop both MinIO containers"
 	@echo ""
 	@echo "Chorus only (Path B)"
@@ -48,7 +52,7 @@ help:
 	@echo "  make chorus-config write the chorus storage config from .env"
 	@echo "  make chorus-reload apply .env changes to a running worker"
 	@echo "  make chorus-up     start redis, worker (:9671) and web-ui (:8080)"
-	@echo "  make repl          add replication A -> B for bucket '$(BUCKET)'"
+	@echo "  make repl          add replication A -> B for bucket '$(BUCKET)' (BUCKET=all: every bucket)"
 	@echo "  make chorus-down   stop the chorus stack"
 	@echo ""
 	@echo "Verification only (Path C)"
@@ -79,12 +83,12 @@ minio-down:
 seed:
 	@if command -v mc >/dev/null 2>&1; then \
 	  echo "seeding with the local mc client"; \
-	  ENDPOINT=$(SOURCE_URL_LOCAL) BUCKET=$(BUCKET) scripts/seed.sh; \
+	  ENDPOINT=$(SOURCE_URL_LOCAL) BUCKET=$(SEED_BUCKET) scripts/seed.sh; \
 	else \
 	  echo "no local mc found, seeding with $(MC_IMAGE)"; \
 	  docker run --rm --network $(NETWORK) -v "$$PWD/scripts:/scripts:ro" \
 	    --entrypoint sh $(MC_IMAGE) \
-	    -c "ENDPOINT=$(SOURCE_URL) BUCKET=$(BUCKET) /scripts/seed.sh"; \
+	    -c "ENDPOINT=$(SOURCE_URL) BUCKET=$(SEED_BUCKET) /scripts/seed.sh"; \
 	fi
 
 chorus-clone:
@@ -120,8 +124,20 @@ chorus-down:
 # 'repl add' returns immediately; the copy runs in the background. Waiting
 # here is what makes 'make lab' verify a finished migration instead of an
 # empty target bucket.
+#
+# BUCKET=all adds one bucket-level policy per source bucket instead of a
+# user-level policy: Chorus refuses a user-level policy once any bucket-level
+# one exists, and 'repl buckets' lists exactly the buckets that have none yet,
+# so this is safe to re-run.
 repl: chorus-wait
+ifeq ($(BUCKET),all)
+	@for b in $$(chorctl repl buckets -u $(CHORUS_USER) -f main -t follower); do \
+	  echo "adding replication for bucket $$b"; \
+	  chorctl repl add -u $(CHORUS_USER) -f main -t follower -b $$b; \
+	done
+else
 	chorctl repl add -u $(CHORUS_USER) -f main -t follower -b $(BUCKET) || true
+endif
 	@scripts/wait-replication.sh
 	chorctl repl
 

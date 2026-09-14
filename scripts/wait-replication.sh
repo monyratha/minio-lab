@@ -11,9 +11,13 @@ TIMEOUT="${TIMEOUT:-180}"
 
 echo "waiting for the initial copy to finish (timeout ${TIMEOUT}s) ..."
 
+# With several bucket policies (BUCKET=all) every one must report
+# isInitDone; one finished bucket is not enough.
 waited=0
 while [ "$waited" -lt "$TIMEOUT" ]; do
-  if curl -s -X POST "$API/replication" -d '{}' | grep -Eq '"isInitDone" *: *true'; then
+  status=$(curl -s -X POST "$API/replication" -d '{}')
+  if echo "$status" | grep -Eq '"isInitDone" *: *true' &&
+     ! echo "$status" | grep -Eq '"isInitDone" *: *false'; then
     echo "initial copy finished after ${waited}s"
     exit 0
   fi
