@@ -1,64 +1,128 @@
-# minio-lab — MinIO Community → Enterprise migration verification
+# minio-lab — migrate a MinIO and prove the copy
 
-A small lab that migrates a bucket from one MinIO to another with
-[Chorus](https://github.com/clyso/chorus), then verifies the result with an
-independent S3 tool.
+Copies every bucket from one MinIO (or any S3 server) to another with
+[Chorus](https://github.com/clyso/chorus), then checks the copy with
+`migration-verify` and gives a PASS / FAIL report.
 
-| Directory | Purpose |
-|-----------|---------|
-| `minio-a/` | Source MinIO (`http://localhost:9000`, console `:9001`), compose file + data dir (ignored) |
-| `minio-b/` | Target MinIO (`http://localhost:9002`, console `:9003`), compose file + data dir (ignored) |
-| `chorus/` | Upstream clone of <https://github.com/clyso/chorus> (ignored; lab changes are in `chorus-lab-config.patch`) |
-| `minio-migration-verification/` | `migration-verify` Go CLI, checklist, Chorus findings, test results, reports |
-
-## Quick start
-
-```bash
-make
+```
+ source ──── Chorus copies ────▶ target
+    └──── migration-verify compares ────┘
 ```
 
-That lists every target. To run the whole lab — MinIO A+B, sample data,
-Chorus, replication and verification:
+Want to try it first? [LAB.md](LAB.md) runs the same flow on a laptop
+with two throw-away MinIO servers.
+
+## Requirements
+
+One machine that can reach both servers. All data flows through it.
 
 ```bash
-make lab
+brew install go minio/stable/mc clyso/tap/chorctl
 ```
 
-Requirements: Docker, Go 1.22+, and `chorctl`
-(`brew install clyso/tap/chorctl`) for the replication step.
+```bash
+git clone git@github.com:monyratha/minio-lab.git && cd minio-lab
+```
 
-## Configuration
+Plus [Docker](https://docs.docker.com/get-docker/), which runs Chorus.
 
-The lab runs with no configuration at all. To point it at your own S3
-servers instead of MinIO A and B, copy the example file and edit it:
+| | |
+|---|---|
+| Source key | can list and read |
+| Target key | can list, read, write and create buckets |
+| Target buckets | empty — objects not on the source count as failures |
+| Writes to the source | must stop at some point; the copy is one-shot (step 5) |
+
+## 1. Configure
 
 ```bash
 cp .env.example .env
-make config
 ```
 
-`.env` is the only place to change. It is git-ignored, and nothing inside
-the `chorus/` clone is ever edited by hand. See
-[GUIDE.md](GUIDE.md#2-all-settings-live-in-env).
+Fill in these lines; leave the rest.
 
-## The three parts are independent
+```dotenv
+SOURCE_URL=https://old.example.com
+SOURCE_ACCESS_KEY=...
+SOURCE_SECRET_KEY=...
 
-You do not have to run everything. Pick what you need:
+TARGET_URL=https://new.example.com
+TARGET_ACCESS_KEY=...
+TARGET_SECRET_KEY=...
 
-| Goal | Command | Details |
-|---|---|---|
-| Two S3 servers to experiment with | `make minio-up && make seed` | [GUIDE.md — Path A](GUIDE.md#path-a--only-minio-a-and-minio-b) |
-| Chorus replication only | `make chorus-up && make repl` | [GUIDE.md — Path B](GUIDE.md#path-b--only-chorus) |
-| Verify any S3 migration, no lab needed | `cd minio-migration-verification && make build` | [GUIDE.md — Path C](GUIDE.md#path-c--only-migration-verify) |
-| The full recorded experiment | `make lab` | [GUIDE.md — Path D](GUIDE.md#path-d--the-full-lab) |
+SOURCE_URL_LOCAL=https://old.example.com
+TARGET_URL_LOCAL=https://new.example.com
+```
 
-Stop everything with `make down`. Delete the data too with `make clean`.
+Chorus runs in Docker, so `SOURCE_URL` / `TARGET_URL` must not be
+`localhost`. The `_LOCAL` pair is used by verify from the machine itself
+and is the same URL for remote servers.
 
-## Documents
+## 2. Start Chorus
 
-* **[GUIDE.md](GUIDE.md)** — step-by-step setup, ports, credentials, common errors.
-* **[MC_CHEATSHEET.md](MC_CHEATSHEET.md)** — the `mc` commands for uploading test data, inspecting A and B, and breaking the migration on purpose.
-* [minio-migration-verification/README.md](minio-migration-verification/README.md) — the `migration-verify` tool: flags, checks, report format.
-* [minio-migration-verification/CHECKLIST.md](minio-migration-verification/CHECKLIST.md) — the verification checklist.
-* [minio-migration-verification/CHORUS_FINDINGS.md](minio-migration-verification/CHORUS_FINDINGS.md) — what Chorus reports, and what it does not.
-* [minio-migration-verification/TEST_RESULTS.md](minio-migration-verification/TEST_RESULTS.md) — recorded commands and results.
+```bash
+make chorus-up
+```
+
+```bash
+chorctl storage
+```
+
+Both `main` (source) and `follower` (target) must be listed. If not, fix
+`.env` and run `make chorus-reload`.
+
+## 3. Copy
+
+```bash
+make repl
+```
+
+Adds a replication for every source bucket and waits. The wait stops after
+180 s but the copy continues; watch it until every row shows `100.0 %`:
+
+```bash
+chorctl dash
+```
+
+## 4. Verify
+
+```bash
+make verify
+```
+
+Compares every bucket: names, sizes, metadata, tags, and a SHA-256 of
+every object's content on both sides. Ends with `Overall PASS` or `FAIL`
+(exit code 1) and lists every problem object. The report is in
+`minio-migration-verification/out/migration-report.html` — keep it as
+evidence.
+
+Large migration? `make verify VERIFY_LEVEL=2` skips the content download
+for a quick first pass.
+
+## 5. Switch over
+
+1. Stop writes to the source.
+2. Re-copy what changed since step 3, per bucket:
+
+```bash
+chorctl diff fix --source main:BUCKET follower:BUCKET --user user1
+```
+
+3. `make verify` until it reports `PASS`.
+4. Point applications at the target. Retire the source only after that.
+
+## 6. Clean up
+
+```bash
+make chorus-down
+```
+
+Stops Chorus on this machine; touches neither server. Remove the keys
+from `.env`.
+
+## More
+
+- [GUIDE.md](GUIDE.md) — every setting, what each command does, troubleshooting
+- [LAB.md](LAB.md) — the lab version with two local MinIO servers
+- [MC_CHEATSHEET.md](MC_CHEATSHEET.md) — `mc` commands for inspecting buckets
+- [minio-migration-verification/README.md](minio-migration-verification/README.md) — the verify tool in full

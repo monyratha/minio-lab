@@ -1,5 +1,5 @@
 # minio-lab — one command per part of the lab.
-# Every target is safe to re-run. See GUIDE.md for the manual steps.
+# Every target is safe to re-run. GUIDE.md explains what each one does.
 #
 # All settings live in one place: .env in this directory. Start from
 # .env.example ("cp .env.example .env"). Everything below is only the
@@ -20,9 +20,10 @@ CHORUS_USER ?= user1
 # bucket, since 'all' is not a bucket.
 SEED_BUCKET := $(if $(filter all,$(BUCKET)),migration-test,$(BUCKET))
 
-# Verification depth: 1 listing/ETag, 2 adds metadata and tags, 3 hashes
-# every object on both sides (downloads everything).
-VERIFY_LEVEL ?= 2
+# Verification depth: 1 listing/ETag, 2 adds metadata and tags, 3 also
+# hashes every object on both sides (downloads everything). 3 is the
+# default so a plain 'make verify' proves the content, not just the ETags.
+VERIFY_LEVEL ?= 3
 
 # What the Chorus worker connects to (container view).
 SOURCE_URL        ?= http://minio-a:9000
