@@ -248,12 +248,17 @@ make status
 
 | Message | Cause | Fix |
 |---|---|---|
+| `chorctl storage` shows only one storage, or none | the worker cannot reach a server | URL uses `localhost`, wrong key, or firewall; fix `.env`, then `make chorus-reload` |
 | `dial tcp [::1]:9671: connection refused` | Chorus worker not running | `make chorus-up` |
 | `InvalidArg: unknown user … for storage main` | `CHORUS_USER` does not match the Chorus config | use `user1`, or `make chorus-reload` after changing it |
 | `AlreadyExists: replication already exists` | policy for that bucket already added | harmless; `make repl` ignores it |
+| `make repl` prints `timed out after 180s` | large copy still running | normal; watch `chorctl dash` |
 | `Bucket Exists FAIL target bucket does not exist` | verify ran before the copy finished | wait for `chorctl repl` to show 100 %, then `make verify` again |
-| `Missing Objects 1` after uploading to A | the copy is one-shot | [New files after the copy](#new-files-after-the-copy) |
-| `Extra Objects` on target | something was written to B by hand | delete it on B, or `--fail-on-extra=false` |
+| `missing` objects | on source, not on target: written after the copy started, or copy unfinished | [New files after the copy](#new-files-after-the-copy) |
+| `extra` objects | on target, not on source: the target was not empty | delete them on the target, or `--fail-on-extra=false` |
+| `mismatched` objects | same name, different content or metadata | investigate that object; re-copy with `chorctl diff fix` |
+| verify fails at `Source Connectivity` / `Target Connectivity` with a certificate error | self-signed certificate | `cd minio-migration-verification && ./run-verify.sh --source-insecure --target-insecure` |
+| verify is slow | level 3 downloads everything twice | `make verify VERIFY_LEVEL=2` first, or one bucket: `make verify BUCKET=name` |
 | `Bucket 'migration-test' does not exist` | nothing seeded on A | `make seed` |
 | `pull access denied for minio/mc` | MinIO images moved to quay.io | update the Makefile, or `make seed MC_IMAGE=…` |
 | `zsh: parse error near '#'` | a `#` comment was pasted into zsh | remove the comment |
