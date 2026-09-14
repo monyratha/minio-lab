@@ -14,18 +14,20 @@ with two throw-away MinIO servers.
 
 ## Requirements
 
-One machine that can reach both servers. All data flows through it.
-
-```bash
-brew install go minio/stable/mc clyso/tap/chorctl
-```
+One Ubuntu machine (22.04 or newer) that can reach both servers, with
+[Docker](https://docs.docker.com/engine/install/ubuntu/) installed. All
+data flows through it.
 
 ```bash
 git clone git@github.com:monyratha/minio-lab.git && cd minio-lab
 ```
 
-Plus [Docker](https://docs.docker.com/get-docker/), which runs Chorus.
-On Ubuntu see [GUIDE.md](GUIDE.md#8-install-on-ubuntu).
+```bash
+scripts/install-ubuntu.sh
+```
+
+That installs Go, `chorctl` and `mc`, and checks Docker. On macOS use
+`brew install go minio/stable/mc clyso/tap/chorctl` instead.
 
 | | |
 |---|---|

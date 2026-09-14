@@ -285,9 +285,8 @@ starts from zero.
 ## 8. Install on Ubuntu
 
 Everything in this repository is Docker, Go and shell scripts, so it runs
-the same on Linux; only the install commands differ from macOS. The
-verify tool is built and tested on `ubuntu-latest` in CI. Commands below
-are for amd64; for arm64 swap `amd64` for `arm64` in the download URLs.
+the same on Linux. The verify tool is built and tested on `ubuntu-latest`
+in CI, and `scripts/install-ubuntu.sh` is tested on Ubuntu 22.04 and 24.04.
 
 Docker with the Compose plugin — follow
 <https://docs.docker.com/engine/install/ubuntu/>, then let your user run
@@ -297,31 +296,24 @@ it without `sudo`:
 sudo usermod -aG docker $USER && newgrp docker
 ```
 
-Go — the apt package on 22.04 is too old (1.18). Install from go.dev; any
-Go 1.21 or newer works because the build downloads the toolchain that
-`go.mod` asks for:
+Everything else:
 
 ```bash
-curl -fsSL https://go.dev/dl/go1.27.1.linux-amd64.tar.gz | sudo tar -C /usr/local -xz && echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.profile && export PATH=$PATH:/usr/local/go/bin
+scripts/install-ubuntu.sh
 ```
 
-`chorctl` — a single binary from the Chorus releases:
+It installs, using `sudo` for `/usr/local`:
 
-```bash
-curl -fsSL https://github.com/clyso/chorus/releases/download/v0.7.10/chorctl_v0.7.10_linux_amd64.tar.gz | tar -xz && sudo install chorctl /usr/local/bin/ && rm chorctl
-```
+| Tool | Version | From |
+|---|---|---|
+| Go | 1.27.1, the version `go.mod` asks for | go.dev |
+| `chorctl` | 0.7.10, the version the lab is tested with | Chorus GitHub release |
+| `mc` | latest GitHub release | `minio/mc` GitHub release (`dl.min.io` no longer serves it) |
 
-`mc` — a single binary from MinIO:
-
-```bash
-curl -fsSL https://dl.min.io/client/mc/release/linux-amd64/mc -o mc && sudo install mc /usr/local/bin/ && rm mc
-```
-
-Then:
-
-```bash
-git clone git@github.com:monyratha/minio-lab.git && cd minio-lab && make config
-```
+The script is safe to re-run, skips what is already installed, and picks
+amd64 or arm64 by itself. Ubuntu's own `golang-go` package is not used
+because on 22.04 it is 1.18, too old for this project. Versions can be
+overridden: `GO_VERSION=… CHORCTL_VERSION=… MC_RELEASE=… scripts/install-ubuntu.sh`.
 
 Two Linux-specific points:
 

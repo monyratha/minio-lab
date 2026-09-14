@@ -20,7 +20,7 @@ nothing else set up. For a real source and target, use the
 - `chorctl` — `brew install clyso/tap/chorctl`
 - `mc`, optional, to upload your own data — `brew install minio/stable/mc`
 
-Ubuntu commands for all of these: [GUIDE.md](GUIDE.md#8-install-on-ubuntu).
+On Ubuntu, `scripts/install-ubuntu.sh` installs all three.
 
 ## Try it in one command
 
