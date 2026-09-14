@@ -281,3 +281,53 @@ clone and the built binary. The redis volume matters: Chorus keeps its
 replication policies there, and with stale policies a fresh lab thinks the
 copy already happened and copies nothing. `make clean` then `make lab`
 starts from zero.
+
+## 8. Install on Ubuntu
+
+Everything in this repository is Docker, Go and shell scripts, so it runs
+the same on Linux; only the install commands differ from macOS. The
+verify tool is built and tested on `ubuntu-latest` in CI. Commands below
+are for amd64; for arm64 swap `amd64` for `arm64` in the download URLs.
+
+Docker with the Compose plugin — follow
+<https://docs.docker.com/engine/install/ubuntu/>, then let your user run
+it without `sudo`:
+
+```bash
+sudo usermod -aG docker $USER && newgrp docker
+```
+
+Go — the apt package on 22.04 is too old (1.18). Install from go.dev; any
+Go 1.21 or newer works because the build downloads the toolchain that
+`go.mod` asks for:
+
+```bash
+curl -fsSL https://go.dev/dl/go1.27.1.linux-amd64.tar.gz | sudo tar -C /usr/local -xz && echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.profile && export PATH=$PATH:/usr/local/go/bin
+```
+
+`chorctl` — a single binary from the Chorus releases:
+
+```bash
+curl -fsSL https://github.com/clyso/chorus/releases/download/v0.7.10/chorctl_v0.7.10_linux_amd64.tar.gz | tar -xz && sudo install chorctl /usr/local/bin/ && rm chorctl
+```
+
+`mc` — a single binary from MinIO:
+
+```bash
+curl -fsSL https://dl.min.io/client/mc/release/linux-amd64/mc -o mc && sudo install mc /usr/local/bin/ && rm mc
+```
+
+Then:
+
+```bash
+git clone git@github.com:monyratha/minio-lab.git && cd minio-lab && make config
+```
+
+Two Linux-specific points:
+
+- `host.docker.internal` does not exist on Linux Docker by default. If a
+  MinIO server runs on the same host **outside** Docker, put the host's
+  LAN IP in `SOURCE_URL` / `TARGET_URL`. The lab's own MinIO A and B are
+  containers on the shared network, so they need nothing.
+- Use `docker compose` (the plugin), not the old `docker-compose` binary;
+  the Makefile calls the former.

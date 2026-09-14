@@ -25,6 +25,7 @@ git clone git@github.com:monyratha/minio-lab.git && cd minio-lab
 ```
 
 Plus [Docker](https://docs.docker.com/get-docker/), which runs Chorus.
+On Ubuntu see [GUIDE.md](GUIDE.md#8-install-on-ubuntu).
 
 | | |
 |---|---|
