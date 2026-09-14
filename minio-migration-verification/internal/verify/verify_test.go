@@ -1,6 +1,7 @@
 package verify
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -132,4 +133,49 @@ func indexOf(s, sub string) int {
 		}
 	}
 	return -1
+}
+
+func TestReportOrderingHelpers(t *testing.T) {
+	r := &report.Report{Buckets: []report.BucketReport{
+		{SourceBucket: "ok", Checks: []report.Check{{Name: "Bucket Exists", Status: report.Pass}},
+			Summary: report.Summary{MatchedObjects: 10, DeepVerified: 10}},
+		{SourceBucket: "warned", Checks: []report.Check{{Name: "Tags", Status: report.Warn, Detail: "1 differ"}}},
+		{SourceBucket: "gone", Checks: []report.Check{{Name: "Bucket Exists", Status: report.Fail, Detail: "target bucket does not exist"}}},
+	}}
+	r.Recompute()
+
+	if got := r.ProblemBuckets(); got != 2 {
+		t.Errorf("ProblemBuckets = %d, want 2", got)
+	}
+	ordered := r.BucketsByStatus()
+	if ordered[0].SourceBucket != "gone" || ordered[1].SourceBucket != "warned" || ordered[2].SourceBucket != "ok" {
+		t.Errorf("BucketsByStatus should put FAIL, then WARN, then PASS; got %s %s %s",
+			ordered[0].SourceBucket, ordered[1].SourceBucket, ordered[2].SourceBucket)
+	}
+	if r.Buckets[0].SourceBucket != "ok" {
+		t.Errorf("BucketsByStatus must not reorder the report itself")
+	}
+	if h := ordered[0].Headline(); h != "Bucket Exists: target bucket does not exist" {
+		t.Errorf("Headline for a failed bucket = %q", h)
+	}
+	if h := ordered[2].Headline(); h != "10 objects, 10 hashed" {
+		t.Errorf("Headline for a passed bucket = %q", h)
+	}
+}
+
+func TestObjectsProblemsFirst(t *testing.T) {
+	br := &report.BucketReport{Objects: []report.ObjectResult{
+		{Key: "a", Status: report.Pass},
+		{Key: "z", Status: report.Fail},
+		{Key: "m", Status: report.Warn},
+		{Key: "b", Status: report.Fail},
+	}}
+	sortObjects(br)
+	var keys []string
+	for _, o := range br.Objects {
+		keys = append(keys, o.Key)
+	}
+	if got := strings.Join(keys, ","); got != "b,z,m,a" {
+		t.Errorf("objects should be sorted FAIL, WARN, PASS then by key; got %s", got)
+	}
 }

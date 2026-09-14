@@ -12,3 +12,4 @@ minio-migration-verification/out/
 
 # local configuration, may contain real keys
 .env
+.claude/

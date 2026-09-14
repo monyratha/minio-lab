@@ -297,7 +297,7 @@ func (v *Verifier) verifyBucket(ctx context.Context, p BucketPair) report.Bucket
 		add(v.smokeTest(ctx, p.Target))
 	}
 
-	sort.Slice(br.Objects, func(i, j int) bool { return br.Objects[i].Key < br.Objects[j].Key })
+	sortObjects(&br)
 	br.Elapsed = time.Since(start).Round(time.Millisecond).String()
 	return br
 }
@@ -353,4 +353,16 @@ func preview(keys []string) string {
 		return strings.Join(keys, ", ")
 	}
 	return strings.Join(keys[:5], ", ") + fmt.Sprintf(", ... (+%d)", len(keys)-5)
+}
+
+// sortObjects orders a bucket's object list problems first (worst status
+// first), then by key, so a single failure is not buried among matches.
+func sortObjects(br *report.BucketReport) {
+	sort.Slice(br.Objects, func(i, j int) bool {
+		a, b := br.Objects[i], br.Objects[j]
+		if a.Status != b.Status {
+			return a.Status.Worse(b.Status)
+		}
+		return a.Key < b.Key
+	})
 }

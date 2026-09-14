@@ -353,8 +353,10 @@ func (v *Verifier) compareObjects(ctx context.Context, pair BucketPair, common [
 				c.results = append(c.results, res)
 			case report.Pass:
 				c.matched++
-				// always list deep-verified objects so the report explains the download
-				if v.cfg.ListMatched || s.SHA256 != "" {
+				// list on-demand deep checks (level < 3) so the report explains the
+				// download; at level 3 every object is hashed and the bucket summary
+				// already says so, so listing them all would only bloat the report
+				if v.cfg.ListMatched || (s.SHA256 != "" && v.cfg.Level < 3) {
 					if s.SHA256 != "" {
 						res.Reasons = append(res.Reasons, "deep-verified")
 					}
