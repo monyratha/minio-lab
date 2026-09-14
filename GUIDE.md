@@ -56,7 +56,7 @@ Any setting can also be given for one command: `make verify BUCKET=photos`.
 | `SOURCE_PROVIDER` / `TARGET_PROVIDER` | `Minio` | `Minio`, `Ceph` or `Other` |
 | `SOURCE_REGION` / `TARGET_REGION` | empty | optional S3 region |
 | `BUCKET` | `all` | what `repl` and `verify` handle: `all` = every bucket on the source, a name = only that bucket. `seed` always creates `migration-test` |
-| `VERIFY_LEVEL` | `2` | depth of `make verify`, see [§5](#5-migration-verify) |
+| `VERIFY_LEVEL` | `3` | depth of `make verify`, see [§5](#5-migration-verify) |
 | `CHORUS_USER` | `user1` | label of the credentials inside the Chorus config; not an S3 user |
 | `NETWORK` | `minio-migration` | Docker network shared by MinIO and Chorus |
 | `CHORUS_REF` | `8b68045` | pinned Chorus commit |
@@ -218,13 +218,14 @@ the ones below it.
 | Level | Checks | Cost | Use for |
 |---|---|---|---|
 | 1 | bucket settings; object names, count, size, ETag | one listing per side | huge buckets, first pass |
-| 2 (default) | + content type, user metadata, tags | one HEAD and one tagging request per object per side | normal verification |
-| 3 | + SHA-256 of every object's content | downloads all data from both sides | proof of byte-identical content |
+| 2 | + content type, user metadata, tags | one HEAD and one tagging request per object per side | quick pass on a large bucket |
+| 3 (default) | + SHA-256 of every object's content | downloads all data from both sides | proof of byte-identical content |
 
-Level 2 is normally enough: an ETag is the MD5 of the content for
-single-part unencrypted uploads, so equal ETags already prove equal content.
-Objects whose ETag cannot be trusted (multipart, SSE) and differ are hashed
-on demand at any level, so a doubtful object never passes silently.
+Level 3 is the default so that a plain `make verify` proves the content.
+Level 2 is a sound shortcut when the download is too expensive: an ETag is
+the MD5 of the content for single-part unencrypted uploads, so equal ETags
+already prove equal content, and objects whose ETag cannot be trusted
+(multipart, SSE) and differ are hashed on demand at any level.
 
 Exit codes: `0` PASS (or WARN), `1` FAIL, `2` could not run.
 

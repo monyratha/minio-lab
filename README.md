@@ -93,8 +93,9 @@ that was already copied.
 make verify
 ```
 
-Compares every bucket on A with B: object names, sizes, checksums, content
-type, metadata and tags. Prints a summary and writes
+Compares every bucket on A with B: object names, sizes, content type,
+metadata, tags, and a SHA-256 of every object's content on both sides.
+Prints a summary and writes
 `minio-migration-verification/out/migration-report.html`.
 
 ```
@@ -105,10 +106,11 @@ Overall            PASS
 ```
 
 Exit code is 1 on FAIL, so it works as a gate in a script.
-For a byte-for-byte check of all content:
+The content check downloads everything from both sides; for a quick pass
+on a large bucket that skips it:
 
 ```bash
-make verify VERIFY_LEVEL=3
+make verify VERIFY_LEVEL=2
 ```
 
 ## Use your own servers

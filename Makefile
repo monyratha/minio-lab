@@ -20,9 +20,10 @@ CHORUS_USER ?= user1
 # bucket, since 'all' is not a bucket.
 SEED_BUCKET := $(if $(filter all,$(BUCKET)),migration-test,$(BUCKET))
 
-# Verification depth: 1 listing/ETag, 2 adds metadata and tags, 3 hashes
-# every object on both sides (downloads everything).
-VERIFY_LEVEL ?= 2
+# Verification depth: 1 listing/ETag, 2 adds metadata and tags, 3 also
+# hashes every object on both sides (downloads everything). 3 is the
+# default so a plain 'make verify' proves the content, not just the ETags.
+VERIFY_LEVEL ?= 3
 
 # What the Chorus worker connects to (container view).
 SOURCE_URL        ?= http://minio-a:9000
