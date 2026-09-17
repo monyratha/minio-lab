@@ -10,6 +10,8 @@ minio-migration-verification/bin/
 minio-migration-verification/out/
 .idea/
 
-# local configuration, may contain real keys
+# local configuration, may contain real keys (.env, .env.project1, ...)
 .env
+.env.*
+!.env.example
 .claude/
