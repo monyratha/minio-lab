@@ -79,9 +79,14 @@ SOURCE_URL_LOCAL=https://old.example.com
 TARGET_URL_LOCAL=https://new.example.com
 ```
 
-Chorus runs in Docker, so `SOURCE_URL` / `TARGET_URL` must not be
-`localhost`. The `_LOCAL` pair is used by verify from the machine itself
-and is the same URL for remote servers.
+Why two URLs for each server? Chorus runs in Docker and uses
+`SOURCE_URL` / `TARGET_URL` from inside its container; `make verify` runs
+on the machine itself and uses the `_LOCAL` pair. For real servers both
+are the same address. Only `localhost` is different in Docker, so never
+use it in `SOURCE_URL` / `TARGET_URL`.
+
+Chorus has run on this machine before, or this is your second
+migration? See [step 7](#7-start-fresh-or-switch-to-another-project).
 
 ## 2. Start Chorus
 
@@ -124,6 +129,28 @@ evidence.
 Large migration? `make verify VERIFY_LEVEL=2` skips the content download
 for a quick first pass.
 
+### Quick checks with `mc`
+
+Once, register both servers (`mc` asks for the key and secret):
+
+```bash
+mc alias set src https://old.example.com
+```
+
+```bash
+mc alias set dst https://new.example.com
+```
+
+Then, at any time:
+
+| Question | Command |
+|---|---|
+| Same buckets on both sides? | `mc ls src` and `mc ls dst` |
+| Same size and object count per bucket? | `mc du --depth 1 src` and `mc du --depth 1 dst` |
+| Which objects differ in one bucket? | `mc diff src/BUCKET dst/BUCKET` (no output = identical) |
+
+`mc` is the 10-second sanity check; `make verify` is the proof.
+
 ## 5. Switch over
 
 1. Stop writes to the source.
@@ -144,6 +171,84 @@ make chorus-down
 
 Stops Chorus on this machine; touches neither server. Remove the keys
 from `.env`.
+
+## 7. Start fresh, or switch to another project
+
+Every migration is one settings file. `.env` is the default; a second
+migration gets its own file, e.g. `.env.project2`. The commands are the
+same for all of them.
+
+### Start fresh
+
+Use this when Chorus has run before on this machine — a lab run, a test,
+or an earlier project — and you want to begin a migration from zero.
+
+1. Clear what Chorus remembers (neither server is touched):
+
+```bash
+make chorus-reset
+```
+
+2. Configure as in [step 1](#1-configure) and continue with
+   [step 2](#2-start-chorus).
+
+Why the reset: Chorus remembers finished replications by bucket name.
+Without it, a bucket named `assets` in the new migration would be treated
+as already copied and skipped.
+
+### Switch to another project
+
+Use this when project 1 is done and project 2 is next.
+
+1. Finish project 1: every row of `chorctl repl` at `100.0 %`,
+   `make verify` says `PASS`, and the report is saved where the next run
+   will not overwrite it:
+
+```bash
+cp minio-migration-verification/out/migration-report.html ~/project1-report.html
+```
+
+2. Clear what Chorus remembers about project 1:
+
+```bash
+make chorus-reset
+```
+
+3. Create project 2's settings file and fill in the same lines as in
+   [step 1](#1-configure):
+
+```bash
+cp .env.example .env.project2
+```
+
+4. Tell `make` to use it — once per terminal:
+
+```bash
+export ENV=.env.project2
+```
+
+5. Check that the switch took effect:
+
+```bash
+make config
+```
+
+The last line must say `settings from .env.project2` and the URLs must be
+project 2's servers.
+
+6. Run [steps 2 to 6](#2-start-chorus) exactly as before: `make chorus-up`,
+   `make repl`, `make verify`, save the report, `make chorus-down`.
+
+For project 3, repeat from 1 with `.env.project3`.
+
+Good to know:
+
+- A new terminal forgets `export ENV=…`; run it again, or write the file
+  on each command: `make repl ENV=.env.project2`.
+- `make config` always tells you which file is active. Check it when in
+  doubt.
+- All `.env*` files are git-ignored, so keeping the old ones as a record
+  is safe.
 
 ## More
 

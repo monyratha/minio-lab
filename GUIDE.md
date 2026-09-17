@@ -48,6 +48,11 @@ cp .env.example .env
 Any setting can also be given for one command: `make verify BUCKET=photos`.
 `make config` shows what is in use.
 
+Several migrations? Keep one file per project and choose it with `ENV`:
+`make repl ENV=.env.project2`, or `export ENV=.env.project2` once per
+terminal. `.env.*` files are git-ignored like `.env`. Run
+`make chorus-reset` between projects — see [§7](#7-clean-up).
+
 | Variable | Default | Meaning |
 |---|---|---|
 | `SOURCE_URL` / `TARGET_URL` | `http://minio-a:9000` / `http://minio-b:9000` | source and target **as the Chorus worker reaches them** from inside Docker |
@@ -58,7 +63,9 @@ Any setting can also be given for one command: `make verify BUCKET=photos`.
 | `SOURCE_REGION` / `TARGET_REGION` | empty | optional S3 region |
 | `BUCKET` | `all` | what `repl` and `verify` handle: `all` = every bucket on the source, a name = only that bucket. `seed` always creates `migration-test` |
 | `VERIFY_LEVEL` | `3` | depth of `make verify`, see [§5](#5-migration-verify) |
+| `SMOKE` | `1` | `make verify` writes and deletes a probe object in every target bucket; `0` skips that |
 | `CHORUS_USER` | `user1` | label of the credentials inside the Chorus config; not an S3 user |
+| `ENV` | `.env` | the settings file to load; only meaningful on the command line or exported in the shell |
 | `NETWORK` | `minio-migration` | Docker network shared by MinIO and Chorus |
 | `CHORUS_REF` | `8b68045` | pinned Chorus commit |
 | `MC_IMAGE` | `quay.io/minio/mc:latest` | `mc` image, used by `make seed` only when you have no local `mc` |
@@ -202,6 +209,19 @@ What Chorus reports, and what it does not, is written down in
 make chorus-down
 ```
 
+Stops the Chorus containers; the replication policies stay in the redis
+volume, so `make chorus-up` continues where it left off.
+
+```bash
+make chorus-reset
+```
+
+Also deletes the redis volume, so Chorus forgets every policy. Use it
+between two migrations: policies are keyed by user and bucket name, so
+without the reset a bucket in the next project that has the same name as
+one already copied would be treated as done and skipped, and a target
+bucket used before would be refused. Neither server is touched.
+
 ## 5. migration-verify
 
 ```bash
@@ -254,6 +274,8 @@ make status
 | `AlreadyExists: replication already exists` | policy for that bucket already added | harmless; `make repl` ignores it |
 | `make repl` prints `timed out after 180s` | large copy still running | normal; watch `chorctl dash` |
 | `Bucket Exists FAIL target bucket does not exist` | verify ran before the copy finished | wait for `chorctl repl` to show 100 %, then `make verify` again |
+| `App Smoke Test FAIL: PUT failed: Access Denied` on every bucket | the target key may not write a probe object; the copied data is unaffected | check the key's policy if applications will use it, or `make verify SMOKE=0` |
+| one object `ERROR: target GET: unexpected EOF`, everything else matched | the content download broke off once | `make verify BUCKET=name` again for that bucket |
 | `missing` objects | on source, not on target: written after the copy started, or copy unfinished | [New files after the copy](#new-files-after-the-copy) |
 | `extra` objects | on target, not on source: the target was not empty | delete them on the target, or `--fail-on-extra=false` |
 | `mismatched` objects | same name, different content or metadata | investigate that object; re-copy with `chorctl diff fix` |
@@ -280,7 +302,8 @@ Also deletes `minio-a/data`, `minio-b/data`, the redis volume, the Chorus
 clone and the built binary. The redis volume matters: Chorus keeps its
 replication policies there, and with stale policies a fresh lab thinks the
 copy already happened and copies nothing. `make clean` then `make lab`
-starts from zero.
+starts from zero. To drop only the policies and keep everything else,
+use `make chorus-reset`.
 
 ## 8. Install on Ubuntu
 

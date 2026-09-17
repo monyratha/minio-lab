@@ -5,8 +5,12 @@
 # .env.example ("cp .env.example .env"). Everything below is only the
 # fallback used when .env does not set a value, and any of them can also be
 # overridden on the command line: make verify BUCKET=other-bucket
+#
+# Several migrations? Keep one file per project (.env.project1, ...) and
+# pick it with ENV: make repl ENV=.env.project1
 
--include .env
+ENV ?= .env
+-include $(ENV)
 export
 
 NETWORK     := minio-migration
@@ -25,6 +29,10 @@ SEED_BUCKET := $(if $(filter all,$(BUCKET)),migration-test,$(BUCKET))
 # default so a plain 'make verify' proves the content, not just the ETags.
 VERIFY_LEVEL ?= 3
 
+# SMOKE=0 skips the write test on the target (PUT/GET/DELETE of a probe
+# object), for keys that may only read the target.
+SMOKE ?= 1
+
 # What the Chorus worker connects to (container view).
 SOURCE_URL        ?= http://minio-a:9000
 TARGET_URL        ?= http://minio-b:9000
@@ -41,7 +49,7 @@ TARGET_URL_LOCAL  ?= http://localhost:9002
 
 .DEFAULT_GOAL := help
 .PHONY: help net minio-up minio-down seed chorus-clone chorus-config chorus-up \
-        chorus-down chorus-reload chorus-wait repl verify lab status down clean config
+        chorus-down chorus-reset chorus-reload chorus-wait repl verify-build verify lab status down clean config
 
 help:
 	@echo "Storage only (Path A)"
@@ -56,6 +64,7 @@ help:
 	@echo "  make chorus-up     start redis, worker (:9671) and web-ui (:8080)"
 	@echo "  make repl          add replication A -> B for bucket '$(BUCKET)' ('all' = every bucket)"
 	@echo "  make chorus-down   stop the chorus stack"
+	@echo "  make chorus-reset  stop it and forget every replication (before switching ENV)"
 	@echo ""
 	@echo "Verification only (Path C)"
 	@echo "  make verify        build migration-verify and check A against B (VERIFY_LEVEL=$(VERIFY_LEVEL))"
@@ -123,6 +132,14 @@ chorus-wait:
 chorus-down:
 	[ -d chorus/docker-compose ] || exit 0; cd chorus/docker-compose && docker compose down
 
+# Chorus remembers replication policies in its redis volume, keyed by user
+# and bucket name only. Switching to another project's .env without this
+# would make 'make repl' skip buckets whose names it saw before and refuse
+# target buckets a previous project already used. Data on the servers is
+# untouched.
+chorus-reset:
+	[ -d chorus/docker-compose ] || exit 0; cd chorus/docker-compose && docker compose down -v
+
 # 'repl add' returns immediately; the copy runs in the background. Waiting
 # here is what makes 'make lab' verify a finished migration instead of an
 # empty target bucket.
@@ -143,10 +160,13 @@ endif
 	@scripts/wait-replication.sh
 	chorctl repl
 
-verify:
-	cd minio-migration-verification && $(MAKE) build && \
+verify-build:
+	cd minio-migration-verification && $(MAKE) build
+
+verify: verify-build
+	cd minio-migration-verification && \
 	  SOURCE_ENDPOINT=$(SOURCE_URL_LOCAL) TARGET_ENDPOINT=$(TARGET_URL_LOCAL) \
-	  BUCKET=$(BUCKET) ./run-verify.sh --smoke-test --level $(VERIFY_LEVEL)
+	  BUCKET=$(BUCKET) ./run-verify.sh $(if $(filter 0,$(SMOKE)),,--smoke-test) --level $(VERIFY_LEVEL)
 
 config:
 	@echo "chorus worker sees   main     $(SOURCE_URL)"
@@ -156,8 +176,9 @@ config:
 	@echo "bucket               $(BUCKET)"
 	@echo "chorus user          $(CHORUS_USER)"
 	@echo "verify level         $(VERIFY_LEVEL)"
-	@if [ -f .env ]; then echo "settings from        .env"; \
-	else echo "settings from        built-in lab defaults (no .env file)"; fi
+	@echo "smoke test           $(if $(filter 0,$(SMOKE)),off (SMOKE=0),on)"
+	@if [ -f $(ENV) ]; then echo "settings from        $(ENV)"; \
+	else echo "settings from        built-in lab defaults ($(ENV) not found)"; fi
 
 lab: minio-up seed chorus-up repl verify
 
